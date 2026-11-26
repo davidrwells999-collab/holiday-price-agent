@@ -170,10 +170,76 @@
 
 ## Traceability
 
-(Filled by roadmap creation.)
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| FND-01 | Phase 1 | Pending |
+| FND-02 | Phase 1 | Pending |
+| FND-03 | Phase 1 | Pending |
+| FND-04 | Phase 1 | Pending |
+| FND-05 | Phase 1 | Pending |
+| FND-06 | Phase 1 | Pending |
+| CI-01 | Phase 1 | Pending |
+| CI-02 | Phase 1 | Pending |
+| CI-03 | Phase 1 | Pending |
+| CI-05 | Phase 1 | Pending |
+| CI-06 | Phase 1 | Pending |
+| CI-07 | Phase 1 | Pending |
+| COST-01 | Phase 2 | Pending |
+| COST-02 | Phase 2 | Pending |
+| COST-03 | Phase 2 | Pending |
+| COST-04 | Phase 2 | Pending |
+| COST-05 | Phase 2 | Pending |
+| COST-06 | Phase 2 | Pending |
+| EVAL-01 | Phase 2 | Pending |
+| EVAL-02 | Phase 2 | Pending |
+| CI-04 | Phase 2 | Pending |
+| SELL-01 | Phase 3 | Pending |
+| SELL-02 | Phase 3 | Pending |
+| SELL-06 | Phase 3 | Pending |
+| SELL-07 | Phase 3 | Pending |
+| SELL-08 | Phase 3 | Pending |
+| SELL-09 | Phase 3 | Pending |
+| SELL-10 | Phase 3 | Pending |
+| SELL-11 | Phase 3 | Pending |
+| SELL-12 | Phase 3 | Pending |
+| SELL-13 | Phase 3 | Pending |
+| SELL-14 | Phase 3 | Pending |
+| RUN-01 | Phase 3 | Pending |
+| RUN-02 | Phase 3 | Pending |
+| RUN-04 | Phase 3 | Pending |
+| EVAL-03 | Phase 3 | Pending |
+| EVAL-07 | Phase 3 | Pending |
+| OPS-05 | Phase 3 | Pending |
+| OPS-06 | Phase 3 | Pending |
+| DEAL-01 | Phase 4 | Pending |
+| DEAL-02 | Phase 4 | Pending |
+| DEAL-03 | Phase 4 | Pending |
+| EVAL-04 | Phase 4 | Pending |
+| SELL-03 | Phase 5 | Pending |
+| SELL-04 | Phase 5 | Pending |
+| SELL-05 | Phase 5 | Pending |
+| ALRT-01 | Phase 6 | Pending |
+| ALRT-02 | Phase 6 | Pending |
+| ALRT-03 | Phase 6 | Pending |
+| ALRT-04 | Phase 6 | Pending |
+| ALRT-05 | Phase 6 | Pending |
+| ALRT-06 | Phase 6 | Pending |
+| ALRT-07 | Phase 6 | Pending |
+| ALRT-08 | Phase 6 | Pending |
+| ALRT-09 | Phase 6 | Pending |
+| RUN-03 | Phase 6 | Pending |
+| EVAL-05 | Phase 6 | Pending |
+| EVAL-06 | Phase 6 | Pending |
+| OPS-01 | Phase 7 | Pending |
+| OPS-02 | Phase 7 | Pending |
+| OPS-03 | Phase 7 | Pending |
+| OPS-04 | Phase 7 | Pending |
+| OPS-07 | Phase 7 | Pending |
+| OPS-08 | Phase 7 | Pending |
+| OPS-09 | Phase 7 | Pending |
+| DOC-01 | Phase 8 | Pending |
+
+**Coverage:** 66/66 v1 requirements mapped, no orphans, no duplicates.
 
 ---
 *Requirements defined: 2026-11-26*
