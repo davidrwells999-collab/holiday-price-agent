@@ -16,7 +16,7 @@ A personal, self-hosted agent that watches package-holiday prices across UK tour
 - **Delivery cadence**: 8 deliverables (see BRIEF-ADDENDUM.md), each in its own PR (or several small ones). Open the PR, get CI green, work through CodeRabbit's comments, then **stop and wait for the owner's go-ahead before merging**
 - **No live sites in PR CI**: extraction is tested offline against saved fixtures; live traffic only in scheduled runs and the nightly canary
 - **Privacy**: no secrets, tokens or personal data in code, logs, fixtures or PostHog events
-- **Env**: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NTFY_TOPIC`, optional `POSTHOG_API_KEY`, `POSTHOG_HOST`
+- **Env**: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NTFY_TOPIC`, optional `POSTHOG_API_KEY`, `POSTHOG_HOST`, `OTEL_EXPORTER_OTLP_ENDPOINT`
 - **Deploy target**: undecided (home server/VPS with Watchtower, or Fly.io/Railway) — chosen at deliverable 7
 <!-- GSD:project-end -->
 

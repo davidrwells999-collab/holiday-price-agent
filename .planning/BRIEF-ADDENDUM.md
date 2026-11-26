@@ -62,6 +62,15 @@ Use `@mastra/evals` / `runEvals` inside Vitest and assert thresholds so a regres
 - **Error tracking:** send uncaught exceptions to PostHog.
 - Env: `POSTHOG_API_KEY`, `POSTHOG_HOST`. Everything must still work when these are unset.
 
+### Tracing (OpenTelemetry) — supersedes the `withTracing` wording above
+- Use OpenTelemetry as the single instrumentation layer. Enable Mastra's built-in tracing with OTel export; export spans to PostHog via `PostHogSpanProcessor` from `@posthog/ai/otel` (this replaces the direct `withTracing` wrapper; don't double-instrument).
+- One trace per search run (`run_id` as trace attribute). Span hierarchy: workflow run → seller → (airport, date, room) search → page load → extract → LLM call → true-cost → db write → alert.
+- Add manual spans around Playwright steps (navigate, wait-for-price, read text, CAPTCHA check) with attributes: seller, url (no query secrets), status, duration, captcha_detected.
+- Record errors on spans (`span.recordException`) and set status ERROR on failed parses.
+- Privacy: no page HTML, prompts with page content, or personal data as span attributes — only sizes/hashes.
+- Optional `jaeger` service in docker-compose (profile `debug`) with an OTLP exporter toggle via `OTEL_EXPORTER_OTLP_ENDPOINT`, for local trace inspection.
+- If PostHog/OTel env vars are unset, tracing is a no-op.
+
 ### Updated deliverable order
 1. Scaffold plus `.coderabbit.yaml`, PR template, CI (lint, typecheck, unit tests, Docker build), branch protection steps in the README.
 2. True-cost calculator plus tests plus the true-cost eval.

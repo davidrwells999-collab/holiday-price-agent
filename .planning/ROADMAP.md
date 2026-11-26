@@ -50,16 +50,16 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
 ### Phase 3: Jet2 end to end, extraction eval, PostHog tracing
 **Goal**: The owner can run one real Jet2holidays search end to end and get validated, direct-only, true-cost-priced quotes stored with history, with every trust gate, run record and trace in place for the other sellers to reuse.
 **Depends on**: Phase 2
-**Requirements**: SELL-01, SELL-02, SELL-06, SELL-07, SELL-08, SELL-09, SELL-10, SELL-11, SELL-12, SELL-13, SELL-14, RUN-01, RUN-02, RUN-04, EVAL-03, EVAL-07, OPS-05, OPS-06
+**Requirements**: SELL-01, SELL-02, SELL-06, SELL-07, SELL-08, SELL-09, SELL-10, SELL-11, SELL-12, SELL-13, SELL-14, RUN-01, RUN-02, RUN-04, EVAL-03, EVAL-07, OPS-05, OPS-06, OPS-10, OPS-11
 **Success Criteria** (what must be TRUE):
   1. `pnpm run once` scrapes Jet2 for every airport x date x room setup (BHX and BRS, one-room and two-room occupancy), throttled at 5-10 seconds with jitter, and saves direct-only quotes, append-only observations and per-seller run records, with lowest-ever true cost queryable per (seller, airport, date, room) and overall.
   2. A price not literally present in the page text, out of sanity bounds, or on a page whose hotel, party, nights, date or airport differs from the request is rejected; an unknown-direct quote is dropped and a "holiday no longer available" page is recorded as unavailable, not as a price.
   3. A CAPTCHA or bot check stops that seller for the run with a persisted cool-off and status `blocked`; a failed parse saves a screenshot and snapshot that can be promoted to an eval fixture; only search fields are filled and only allow-listed clicks are made.
   4. The extraction eval runs offline on sanitised Jet2 fixtures (100% on price, airport, direct; at least 95% overall, plus an injection fixture) and runs in the evals workflow on path-filtered PRs and nightly, skipping safely on forks.
-  5. With PostHog configured, every LLM call appears as `$ai_generation` with `run_id` as trace id and privacy mode on, and run, quote, scrape-failed and captcha events carry no personal data; with it unset, everything still works.
+  5. With PostHog configured, a `pnpm run once` produces a single OTel trace (`run_id` attribute) exported through `PostHogSpanProcessor`, with the span tree run → seller → search → page load (manual Playwright spans) → extract → LLM call (`$ai_generation`) → true-cost → db write. Failed parses show ERROR spans with recorded exceptions. Span attributes and events hold only sizes/hashes, no page content or personal data. `docker compose --profile debug up` shows the same trace in Jaeger. With PostHog/OTel env unset, tracing is a no-op and everything still works.
   6. PR(s) opened, CI green, CodeRabbit comments addressed, then STOP for the owner's go-ahead before merge.
 **Plans**: TBD
-**Research flag**: Needs phase research. Live Jet2 spike (occupancy encoding `r2c4_1` / `r1c4r1c1`, hidden flight block, `/options` stop point, BRS unavailable text, consent selectors, robots.txt), `@posthog/ai` exports, model parameters.
+**Research flag**: Needs phase research. Live Jet2 spike (occupancy encoding `r2c4_1` / `r1c4r1c1`, hidden flight block, `/options` stop point, BRS unavailable text, consent selectors, robots.txt), `@posthog/ai/otel` `PostHogSpanProcessor` API, and Mastra OTel export config (no double instrumentation), model parameters.
 
 ### Phase 4: Deals scraper and deals eval
 **Goal**: The owner's true-cost figures reflect current cashback and discount deals, discovered daily from the six deal sources, with page content strictly treated as data.

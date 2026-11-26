@@ -1,5 +1,8 @@
 # Project Research Summary
 
+> **Owner decision (2026-11-26, supersedes the PostHog tracing advice below):** OpenTelemetry is the single instrumentation layer. Mastra's built-in tracing exports over OTel → `PostHogSpanProcessor` from `@posthog/ai/otel`, with no `@posthog/ai` client wrapper and no `@mastra/posthog` exporter in addition. Manual Playwright spans, optional Jaeger via the compose `debug` profile, no-op when env is unset. See BRIEF-ADDENDUM.md "Tracing (OpenTelemetry)".
+
+
 **Project:** Holiday Price Agent
 **Domain:** Personal, read-only package-holiday price watcher (UK tour operators): Playwright scraping, Claude text extraction, pure true-cost maths, ntfy alerts, plus owner-required CI, evals and observability
 **Researched:** 2026-11-26

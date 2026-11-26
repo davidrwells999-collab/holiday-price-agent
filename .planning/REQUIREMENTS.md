@@ -131,7 +131,9 @@
 - [ ] **OPS-02**: The deploy runs DB migrations as a separate guarded step before the new version starts, on the chosen target (home server/VPS or Fly.io/Railway)
 - [ ] **OPS-03**: Owner can trigger a "run once now" job via `workflow_dispatch`
 - [ ] **OPS-04**: A nightly live canary runs one real search per seller. On a parser failure or CAPTCHA it opens a deduped GitHub issue and sends an ntfy alert, and it never fails PRs
-- [ ] **OPS-05**: Every LLM call is captured as `$ai_generation` (cost, tokens, latency, model) through one `@posthog/ai`-wrapped Anthropic client, with `run_id` as the trace id and privacy mode on
+- [ ] **OPS-05**: OpenTelemetry is the single instrumentation layer. Mastra's built-in tracing exports over OTel, and spans go to PostHog via `PostHogSpanProcessor` (`@posthog/ai/otel`), with no second wrapper, so there is no double counting. LLM calls show as `$ai_generation` (cost, tokens, latency, model). There is one trace per search run with a `run_id` attribute, and the span tree is workflow run → seller → (airport, date, room) search → page load → extract → LLM call → true-cost → db write → alert
+- [ ] **OPS-10**: Playwright steps (navigate, wait-for-price, read text, CAPTCHA check) get manual spans with attributes seller, url (query secrets stripped), status, duration and captcha_detected. Failed parses call `span.recordException` and set status ERROR. Span attributes never contain page HTML, prompts with page content or personal data, only sizes and hashes
+- [ ] **OPS-11**: Owner can inspect traces locally through an optional `jaeger` compose service (profile `debug`), enabled by setting `OTEL_EXPORTER_OTLP_ENDPOINT`. With PostHog/OTel env unset, tracing is a no-op
 - [ ] **OPS-06**: Custom PostHog events are emitted with a fixed `distinct_id` of `holiday-agent` and no personal data: `search_run_started`/`finished`, `quote_saved`, `scrape_failed`, `captcha_detected`, `deal_found`, `alert_sent`, `eval_run`
 - [ ] **OPS-07**: PostHog dashboards show best true cost over time per seller and airport, scrape success rate, CAPTCHA rate, LLM cost per run and per month, and alerts sent
 - [ ] **OPS-08**: PostHog alerts fire when seller success rate is under 80% over 24h and when LLM spend exceeds £X per day
@@ -211,6 +213,8 @@
 | EVAL-07 | Phase 3 | Pending |
 | OPS-05 | Phase 3 | Pending |
 | OPS-06 | Phase 3 | Pending |
+| OPS-10 | Phase 3 | Pending |
+| OPS-11 | Phase 3 | Pending |
 | DEAL-01 | Phase 4 | Pending |
 | DEAL-02 | Phase 4 | Pending |
 | DEAL-03 | Phase 4 | Pending |
@@ -239,7 +243,7 @@
 | OPS-09 | Phase 7 | Pending |
 | DOC-01 | Phase 8 | Pending |
 
-**Coverage:** 66/66 v1 requirements mapped, no orphans, no duplicates.
+**Coverage:** 68/68 v1 requirements mapped, no orphans, no duplicates.
 
 ---
 *Requirements defined: 2026-11-26*

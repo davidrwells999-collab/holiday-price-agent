@@ -66,7 +66,7 @@ A trustworthy phone alert when the **true cost** of a direct-flight holiday opti
 - **Delivery cadence**: 8 deliverables (see BRIEF-ADDENDUM.md), each in its own PR (or several small ones). Open the PR, get CI green, work through CodeRabbit's comments, then **stop and wait for the owner's go-ahead before merging**
 - **No live sites in PR CI**: extraction is tested offline against saved fixtures; live traffic only in scheduled runs and the nightly canary
 - **Privacy**: no secrets, tokens or personal data in code, logs, fixtures or PostHog events
-- **Env**: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NTFY_TOPIC`, optional `POSTHOG_API_KEY`, `POSTHOG_HOST`
+- **Env**: `ANTHROPIC_API_KEY`, `DATABASE_URL`, `NTFY_TOPIC`, optional `POSTHOG_API_KEY`, `POSTHOG_HOST`, `OTEL_EXPORTER_OTLP_ENDPOINT`
 - **Deploy target**: undecided (home server/VPS with Watchtower, or Fly.io/Railway) — chosen at deliverable 7
 
 ## Key Decisions
@@ -79,6 +79,7 @@ A trustworthy phone alert when the **true cost** of a direct-flight holiday opti
 | True cost as a pure function | Deterministic and unit-testable; the core of alert correctness | — Pending |
 | One phase per brief deliverable (8, per the addendum) | Matches the owner's "PR, CI green, CodeRabbit, then wait" cadence | — Pending |
 | Evals as Vitest tests with thresholds | A regression fails CI the same way a unit test does | — Pending |
+| OpenTelemetry as the single tracing layer: Mastra OTel export → `PostHogSpanProcessor` (`@posthog/ai/otel`), optional Jaeger (`debug` profile) | One instrumentation path, so no double counting. Local inspection without PostHog. Replaces both `withTracing` and the research's `@posthog/ai` client wrapper | — Pending |
 | PostHog is optional | The agent must run fully with PostHog env unset (local dev, CI) | — Pending |
 
 ## Evolution

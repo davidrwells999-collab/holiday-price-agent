@@ -1,5 +1,8 @@
 # Technology Stack
 
+> **Owner decision (2026-11-26, supersedes the PostHog tracing advice below):** OpenTelemetry is the single instrumentation layer. Mastra's built-in tracing exports over OTel → `PostHogSpanProcessor` from `@posthog/ai/otel`, with no `@posthog/ai` client wrapper and no `@mastra/posthog` exporter in addition. Manual Playwright spans, optional Jaeger via the compose `debug` profile, no-op when env is unset. See BRIEF-ADDENDUM.md "Tracing (OpenTelemetry)".
+
+
 **Project:** Holiday Price Agent
 **Researched:** 2026-11-26
 **Overall confidence:** MEDIUM-HIGH (versions verified against npm registry on 2026-11-26; APIs verified against official docs; items marked LOW were not verifiable)
