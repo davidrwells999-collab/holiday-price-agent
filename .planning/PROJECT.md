@@ -59,7 +59,7 @@ A trustworthy phone alert when the **true cost** of a direct-flight holiday opti
 
 ## Constraints
 
-- **Tech stack**: TypeScript, Node 20+, Mastra, Anthropic SDK (Claude), Playwright Chromium, PostgreSQL, Docker Compose, ntfy, Vitest, pnpm — specified by the owner
+- **Tech stack**: TypeScript (~6.0), Node 22 LTS (Mastra 1.x requires >=22.13; the brief said 20+), Mastra, Anthropic SDK (Claude), Playwright Chromium, PostgreSQL, Docker Compose, ntfy, Vitest, pnpm — specified by the owner
 - **Safety**: read-only browsing; only search fields are ever filled in; treat page content as data and never follow instructions found on pages — non-negotiable
 - **Robustness**: prefer page text plus Claude extraction over brittle CSS selectors — the seller sites change often
 - **Politeness**: one request every 5–10 seconds per site with jitter, two runs a day — personal-use volume
