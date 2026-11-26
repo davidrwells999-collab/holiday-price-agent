@@ -179,21 +179,23 @@ Reliable flush with posthog-node 6.1.1:
 - Gate pass/fail on the **assertion**, not on PostHog delivery.
 - Properties must not include personal data or page content. Use `distinct_id: "holiday-agent"` (addendum). Optionally `$process_person_profile: false` to avoid creating a person profile.
 
-### PostHog observability
+### PostHog observability (owner decision: OpenTelemetry is the single tracing layer)
 | Library | Version | Purpose | Notes |
 |---------|---------|---------|-------|
-| `posthog-node` | 6.1.1 | Custom events, feature flags, error tracking | Peer deps are optional (rxjs, otel, react-email). |
-| `@mastra/observability` | 1.24.3 | Mastra tracing config | |
-| `@mastra/posthog` | 1.4.10 | `PosthogExporter` sends Mastra traces as `$ai_generation` | **This is PostHog's documented Mastra route** (page: posthog.com/docs/llm-analytics/installation/mastra). It does NOT use `withTracing`; that name in the addendum is wrong for Mastra. `withTracing` belongs to `@posthog/ai` wrappers for raw provider SDKs. |
-| `@posthog/ai` 8.22.3 | optional | Wraps the raw `@anthropic-ai/sdk` client (peer `@anthropic-ai/sdk >=0.112.3 <2`, `posthog-node ^5 \|\| ^6`) | Needed because extraction calls use the Anthropic SDK directly, not Mastra, so Mastra's exporter will not see them. Use `new PostHogAnthropic({ apiKey, host, posthog })` (or `withTracing` equivalent per its docs) with `posthogPrivacyMode: true` and `posthogTraceId: run_id`. Verify the exact export names in deliverable 3. (MEDIUM) |
-
-Design decision: route **all** LLM calls through the one `@posthog/ai`-wrapped Anthropic client where possible, and use the Mastra exporter only for any Mastra Agent calls. That avoids double counting. If the only LLM calls are direct SDK extraction, skip `@mastra/posthog` in early phases.
-
-- Exporter docs show no privacy-mode or trace-id settings (not covered on the page). Rely on `@posthog/ai` privacy mode for page content, and keep page text out of any Mastra-agent input.
-- Feature flags: `await posthog.isFeatureEnabled("seller_on_the_beach_enabled", "holiday-agent")`; flags are evaluated by a network call (or local evaluation with a personal API key, which this project should not need). Cache per run and **default to true/known-good when PostHog is unreachable or unset**, so an outage cannot silently disable all sellers. Use `getFeatureFlagPayload` for the model switch.
-- Error tracking: `captureException` in `process.on("uncaughtException" | "unhandledRejection")` handlers, then `await shutdown()` before `process.exit`.
-- Env: `POSTHOG_API_KEY`, `POSTHOG_HOST` (default `https://eu.i.posthog.com` for a UK user; US is `us.i.posthog.com`). Both optional.
-- Privacy: whitelist event property names in a typed `Events` map so nothing free-form (page text, URLs with session tokens) can be sent. CodeRabbit's `**/*` rule backs this up.
+| `posthog-node` | 6.1.1 | Custom events, feature flags, error tracking, `eval_run` | Behind the no-op facade |
+| `@mastra/observability` | 1.24.3 | Mastra built-in tracing with OTel export | Workflow/step/LLM spans |
+| `@posthog/ai` (`/otel` entry) | 8.22.3 | `PostHogSpanProcessor` exports OTel spans to PostHog (`$ai_generation` for LLM spans) | **Only** PostHog tracing path. Do NOT also wrap the Anthropic client with `@posthog/ai` or add `@mastra/posthog` PosthogExporter, which would double-instrument. Verify the export name and options in Phase 3 (MEDIUM) |
+| `@opentelemetry/api`, `@opentelemetry/sdk-trace-node`, `@opentelemetry/exporter-trace-otlp-http` | verify in Phase 3 | Manual spans (Playwright steps) + optional OTLP export to Jaeger | Exporter enabled only when `OTEL_EXPORTER_OTLP_ENDPOINT` is set |
+- One trace per search run with a `run_id` attribute. Span tree: workflow run → seller → (airport, date, room) search → page load → extract → LLM call → true-cost → db write → alert.
+- Manual spans around navigate, wait-for-price, read text and CAPTCHA check, with attributes seller, url (query secrets stripped), status, duration, captcha_detected. On a failed parse, call `span.recordException` and set status ERROR.
+- Direct Anthropic SDK extraction calls need an LLM span. Either instrument them with an OTel GenAI instrumentation or create the span manually with `gen_ai.*` attributes so `PostHogSpanProcessor` maps it to `$ai_generation`. Confirm which one PostHog maps in Phase 3.
+- Privacy: no page HTML, prompts containing page content, or personal data as span attributes, only sizes and hashes. PostHog privacy mode is on.
+- Optional `jaeger` compose service (profile `debug`) receiving OTLP.
+- With PostHog/OTel env unset, the tracer provider is a no-op.
+- Feature flags: `isFeatureEnabled("seller_<x>_enabled", "holiday-agent")`, cached per run, **defaulting to the config value when PostHog is unreachable or unset**. Use `getFeatureFlagPayload` for the model switch.
+- Error tracking: `captureException` in `uncaughtException`/`unhandledRejection` handlers, then `await shutdown()`.
+- Env: `POSTHOG_API_KEY`, `POSTHOG_HOST` (default `https://eu.i.posthog.com`), `OTEL_EXPORTER_OTLP_ENDPOINT`, all optional.
+- Privacy: event property names are whitelisted in a typed `Events` map.
 
 ### CI/CD (GitHub Actions)
 Current action majors (from GitHub releases API, 2026-11-26, HIGH): `actions/checkout@v7`, `actions/setup-node@v7`, `pnpm/action-setup@v6`, `docker/setup-buildx-action@v4`, `docker/login-action@v4`, `docker/metadata-action@v6`, `docker/build-push-action@v7`. Pin by SHA in the end state and let Renovate bump them.
