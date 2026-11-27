@@ -1,6 +1,14 @@
 ## Addendum: workflow, CI/CD, evals, observability
 
-### Code review — CHANGE OF PLAN (supersedes the CodeRabbit app/branch-protection points below)
+### Code review — LATEST (supersedes both sections below)
+Code review change: no paid CodeRabbit.
+- PR reviewer = Qodo Merge (free tier, GitHub app, ~30 reviews/month). Owner installs it on davidrwells999-collab/holiday-price-agent.
+- Replace .coderabbit.yaml with Qodo config: add a `.pr_agent.toml` at repo root carrying the same review rules (read-only scraping / no booking or CAPTCHA bypass in src/sellers, pure + tested pricing in src/pricing, eval updates required for src/agent changes, no secrets or personal data in logs/PostHog). Enable /describe and /review on PR open.
+- Before opening each PR, also run the CodeRabbit CLI locally and paste findings + resolutions into the PR description.
+- Branch protection: required checks are our CI jobs only. Qodo's review must be addressed (fixed or replied to) before asking the owner to merge, but it is not a required status check.
+- Keep PRs small to stay within the free review quota.
+
+### Code review — earlier change of plan (superseded)
 No paid CodeRabbit. Repo stays private.
 - Still install/commit .coderabbit.yaml (used by the free PR summaries and the CLI).
 - Before opening each PR, run the CodeRabbit CLI review on the branch (`coderabbit review` against main), fix or justify every finding, and paste a summary of findings + resolutions into the PR description under "CodeRabbit CLI review".

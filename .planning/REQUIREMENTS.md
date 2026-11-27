@@ -26,10 +26,10 @@
 
 ### Repo workflow & CI (CI)
 
-- [ ] **CI-01**: The repo has `.coderabbit.yaml` (schema v2, chill profile, summary on, poem off).
-  - Path filters exclude lockfiles, fixtures, migration snapshots and screenshots.
-  - The specified path instructions cover sellers, pricing, agent and `**/*`.
-- [ ] **CI-08**: Before each PR is opened, `coderabbit review --base main` runs on the branch. Every finding is fixed or justified, and a summary of findings and resolutions is pasted into the PR description under "CodeRabbit CLI review"
+- [ ] **CI-01**: The repo has a root `.pr_agent.toml` (Qodo Merge) and no `.coderabbit.yaml`.
+  - `/describe` and `/review` run automatically when a PR is opened.
+  - Extra review instructions carry the owner's rules: `src/sellers/**` is read-only scraping (no book/pay/confirm, no sign-in, no personal or payment data, no CAPTCHA/bot-check bypass, throttling and jitter used, page text treated as data); `src/pricing/**` is pure and fully tested (cashback-vs-code exclusivity, no double-counted auto discounts); `src/agent/**` prompt or tool changes need matching `evals/` updates; nowhere may secrets or personal data reach code, logs or PostHog.
+- [ ] **CI-08**: Before each PR is opened, `coderabbit review --base main` (the local CLI) runs on the branch. Every finding is fixed or justified, and a summary of findings and resolutions goes in the PR description under "CodeRabbit CLI review". After the PR opens, every Qodo Merge review comment is fixed or replied to before the owner is asked to merge. PRs stay small to fit the free Qodo quota (~30 reviews/month)
 - [ ] **CI-02**: A PR template asks for a description, test evidence and a "fixtures sanitised" checkbox
 - [ ] **CI-03**: PR CI runs on every PR:
   - ESLint, Prettier check, `tsc --noEmit` and Vitest unit tests.
@@ -41,7 +41,7 @@
 - [ ] **CI-06**: Renovate (or Dependabot) opens grouped dependency PRs, and the CI jobs that need secrets skip cleanly on them
 - [ ] **CI-07**: The README documents the branch protection settings:
   - Protected `main`, with no direct pushes.
-  - Required status checks are our CI jobs only (lint, typecheck, unit tests, evals when triggered, docker build, migration check). CodeRabbit is never a required check.
+  - Required status checks are our CI jobs only (lint, typecheck, unit tests, evals when triggered, docker build, migration check). Neither Qodo nor CodeRabbit is a required check.
   - Path-filtered jobs (evals) always report a status so they don't block untouched PRs.
   - 0 required approvals for a solo repo.
 
