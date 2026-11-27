@@ -38,7 +38,7 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
 - [x] 01-04-PLAN.md — Logger, boot/main, non-root Node 22 + Chromium image, compose with one-shot migrate, [BLOCKING] compose proof
 - [x] 01-05-PLAN.md — Verify .pr_agent.toml on main (CI-01), PR template, Renovate, evals skeleton + thresholds
 - [x] 01-06-PLAN.md — Fixture sanitiser, PII/secret scan with self-test, gitleaks config
-- [ ] 01-07-PLAN.md — ci.yml (always-reporting required jobs + ci-success), evals-nightly, README with branch protection
+- [x] 01-07-PLAN.md — ci.yml (always-reporting required jobs + ci-success), evals-nightly, README with branch protection
 - [ ] 01-08-PLAN.md — open PR, CI green, address Qodo, STOP for owner go-ahead
 **Research flag**: Skip (standard patterns). Quick checks only: Playwright image choice and `.pr_agent.toml` keys.
 
@@ -138,7 +138,7 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold, review config, PR template, CI | 6/8 | In Progress|  |
+| 1. Scaffold, review config, PR template, CI | 7/8 | In Progress|  |
 | 2. True-cost calculator and eval harness | 0/TBD | Not started | - |
 | 3. Jet2 end to end, extraction eval, PostHog | 0/TBD | Not started | - |
 | 4. Deals scraper and deals eval | 0/TBD | Not started | - |
