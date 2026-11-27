@@ -76,10 +76,40 @@ const noopTracing: Tracing = {
   shutdown: () => Promise.resolve(),
 };
 
+/** Wraps a provider so every attribute (initial and later) is allow-listed and URL-sanitised. */
+function sanitisingTracing(inner: Tracing): Tracing {
+  const cleanAttributes = (
+    attributes: Partial<Record<SpanAttributeKey, SpanAttributeValue>>,
+  ): Partial<Record<SpanAttributeKey, SpanAttributeValue>> => {
+    const out: Partial<Record<SpanAttributeKey, SpanAttributeValue>> = {};
+    for (const [key, value] of Object.entries(attributes)) {
+      if (value === undefined) continue;
+      const clean = sanitiseSpanAttribute(key, value);
+      if (clean !== undefined) out[key as SpanAttributeKey] = clean;
+    }
+    return out;
+  };
+  return {
+    enabled: inner.enabled,
+    withSpan: (name, attributes, fn) =>
+      inner.withSpan(name, cleanAttributes(attributes), (span) =>
+        fn({
+          setAttribute: (key, value) => {
+            const clean = sanitiseSpanAttribute(key, value);
+            if (clean !== undefined) span.setAttribute(key, clean);
+          },
+          recordException: (error) => span.recordException(error),
+          setError: (message) => span.setError(message),
+        }),
+      ),
+    shutdown: (timeoutMs) => inner.shutdown(timeoutMs),
+  };
+}
+
 export function createTracing(
   env: Pick<Env, 'OTEL_EXPORTER_OTLP_ENDPOINT' | 'POSTHOG_API_KEY'>,
   options: { provider?: Tracing } = {},
 ): Tracing {
   const enabled = isOtlpEnabled(env) || isPostHogEnabled(env);
-  return enabled && options.provider ? options.provider : noopTracing;
+  return enabled && options.provider ? sanitisingTracing(options.provider) : noopTracing;
 }
