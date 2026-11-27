@@ -1,0 +1,50 @@
+name: evals-nightly
+
+on:
+  schedule:
+    - cron: '30 2 * * *' # 02:30 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evals-nightly:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check for Anthropic secret
+        id: secret
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "evals-nightly skipped: ANTHROPIC_API_KEY secret not configured" >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Checkout
+        if: steps.secret.outputs.present == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        if: steps.secret.outputs.present == 'true'
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - name: Set up Node
+        if: steps.secret.outputs.present == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        if: steps.secret.outputs.present == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Run evals
+        if: steps.secret.outputs.present == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          GIT_SHA: ${{ github.sha }}
+        run: pnpm test:evals
