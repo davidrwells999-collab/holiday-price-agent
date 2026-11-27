@@ -9,7 +9,8 @@ export type FindingKind =
   | 'ntfy_topic'
   | 'ntfy_url'
   | 'ntfy_topic_assignment'
-  | 'unsanitised_script';
+  | 'unsanitised_script'
+  | 'unscanned_file_type';
 
 export interface Detector {
   kind: FindingKind;
