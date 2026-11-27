@@ -7,7 +7,7 @@
 
 ### Foundation (FND)
 
-- [ ] **FND-01**: Owner can start the app and Postgres 17 with `docker compose up`. A one-shot `migrate` service applies migrations before the app starts (Node 22, `TZ=Europe/London`, Playwright Chromium in the image)
+- [x] **FND-01**: Owner can start the app and Postgres 17 with `docker compose up`. A one-shot `migrate` service applies migrations before the app starts (Node 22, `TZ=Europe/London`, Playwright Chromium in the image)
 - [ ] **FND-02**: Owner configures the app from `.env` (`ANTHROPIC_API_KEY`, `DATABASE_URL`, `NTFY_TOPIC`, optional `POSTHOG_API_KEY`/`POSTHOG_HOST`), validated by zod at startup, with a committed `.env.example`
 - [ ] **FND-03**: The schema stores searches, quotes, append-only price observations, deals, alerts, runs and per-seller runs.
   - Money is integer pence.
@@ -31,7 +31,7 @@
   - Extra review instructions carry the owner's rules: `src/sellers/**` is read-only scraping (no book/pay/confirm, no sign-in, no personal or payment data, no CAPTCHA/bot-check bypass, throttling and jitter used, page text treated as data); `src/pricing/**` is pure and fully tested (cashback-vs-code exclusivity, no double-counted auto discounts); `src/agent/**` prompt or tool changes need matching `evals/` updates; nowhere may secrets or personal data reach code, logs or PostHog.
 - [ ] **CI-08**: Qodo Merge is the only code reviewer (no CodeRabbit, CLI or app). After each PR opens, every Qodo review comment is fixed or replied to before the owner is asked to merge. PRs stay small to fit the free Qodo quota (~30 reviews/month)
 - [ ] **CI-02**: A PR template asks for a description, test evidence and a "fixtures sanitised" checkbox
-- [ ] **CI-03**: PR CI runs on every PR:
+- [x] **CI-03**: PR CI runs on every PR:
   - ESLint, Prettier check, `tsc --noEmit` and Vitest unit tests.
   - Docker image build.
   - A migration check against a throwaway Postgres service.
@@ -174,7 +174,7 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FND-01 | Phase 1 | Pending |
+| FND-01 | Phase 1 | Complete |
 | FND-02 | Phase 1 | Pending |
 | FND-03 | Phase 1 | Pending |
 | FND-04 | Phase 1 | Pending |
@@ -182,7 +182,7 @@
 | FND-06 | Phase 1 | Pending |
 | CI-01 | Phase 1 | Pending |
 | CI-02 | Phase 1 | Pending |
-| CI-03 | Phase 1 | Pending |
+| CI-03 | Phase 1 | Complete |
 | CI-05 | Phase 1 | Pending |
 | CI-06 | Phase 1 | Pending |
 | CI-07 | Phase 1 | Pending |
