@@ -119,6 +119,8 @@ export function selfTest(): FindingKind[] {
     opaque_token: { file: 'f.txt', text: 'Zx9' + 'Qw8'.repeat(12) },
     cookie_header: { file: 'g.txt', text: 'Set-' + 'Cookie: sid=1' },
     ntfy_topic: { file: 'h.txt', text: topic },
+    ntfy_url: { file: 'h2.txt', text: 'https://' + 'ntfy.sh/' + 'some-topic-name' },
+    ntfy_topic_assignment: { file: 'h3.txt', text: 'NTFY_' + 'TOPIC=' + 'some-topic-name' },
     unsanitised_script: { file: 'i.html', text: '<scr' + 'ipt>1</scr' + 'ipt>' },
   };
   const dir = mkdtempSync(join(tmpdir(), 'fixture-selftest-'));
