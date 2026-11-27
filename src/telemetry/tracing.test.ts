@@ -56,7 +56,77 @@ describe('tracing no-op', () => {
         { OTEL_EXPORTER_OTLP_ENDPOINT: 'http://jaeger:4318', POSTHOG_API_KEY: undefined },
         { provider },
       ),
-    ).toBe(provider);
+    ).not.toBe(undefined);
+  });
+});
+
+describe('guarded provider', () => {
+  const env = { OTEL_EXPORTER_OTLP_ENDPOINT: 'http://jaeger:4318', POSTHOG_API_KEY: undefined };
+
+  function spy(): {
+    provider: Tracing;
+    initial: Record<string, unknown>[];
+    set: [string, unknown][];
+    errors: string[];
+  } {
+    const initial: Record<string, unknown>[] = [];
+    const set: [string, unknown][] = [];
+    const errors: string[] = [];
+    const provider: Tracing = {
+      enabled: true,
+      withSpan: (_n, attrs, fn) => {
+        initial.push(attrs);
+        return fn({
+          setAttribute: (k, v) => void set.push([k, v]),
+          recordException: (e) => void errors.push((e as Error).message),
+          setError: (m) => void errors.push(m),
+        });
+      },
+      shutdown: () => Promise.resolve(),
+    };
+    return { provider, initial, set, errors };
+  }
+
+  it('filters initial attributes: drops unlisted keys and strips url secrets', async () => {
+    const { provider, initial } = spy();
+    const tracing = createTracing(env, { provider });
+    expect(tracing.enabled).toBe(true);
+    await tracing.withSpan(
+      'page.navigate',
+      {
+        seller: 'jet2',
+        url: 'https://example.com/h?sessionId=abc&token=x#f',
+        page_text: 'secret body',
+      } as never,
+      () => Promise.resolve(),
+    );
+    expect(initial[0]).toEqual({ seller: 'jet2', url: 'https://example.com/h' });
+  });
+
+  it('filters later setAttribute calls', async () => {
+    const { provider, set } = spy();
+    const tracing = createTracing(env, { provider });
+    await tracing.withSpan('run', {}, (span) => {
+      span.setAttribute('page_text' as never, 'secret');
+      span.setAttribute('url', 'https://example.com/a?auth=1');
+      span.setAttribute('quotes', 3);
+      return Promise.resolve();
+    });
+    expect(set).toEqual([
+      ['url', 'https://example.com/a'],
+      ['quotes', 3],
+    ]);
+  });
+
+  it('strips url queries from error messages', async () => {
+    const { provider, errors } = spy();
+    const tracing = createTracing(env, { provider });
+    await tracing.withSpan('run', {}, (span) => {
+      span.setError('failed https://example.com/a?sid=1');
+      span.recordException(new Error('bad https://example.com/b?token=2'));
+      return Promise.resolve();
+    });
+    expect(errors).toEqual(['failed https://example.com/a', 'bad https://example.com/b']);
   });
 });
 
