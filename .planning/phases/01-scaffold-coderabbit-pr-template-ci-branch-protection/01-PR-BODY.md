@@ -19,7 +19,7 @@ Requirements: FND-01 to FND-06, CI-01 (`.pr_agent.toml`, merged separately in #1
 Commands were run locally on this branch (macOS, Docker 29). This PR is the first CI run.
 
 - `pnpm install --frozen-lockfile && pnpm lint && pnpm format:check && pnpm typecheck`: all exit 0.
-- `pnpm test`: **122 passed** across 10 files.
+- `pnpm test`: **144 passed** after the Qodo fixes (122 at first push). The integration suite passed twice in a row against a throwaway Postgres 17.12.
 - Purity rule: a probe `src/pricing/__lint_probe.ts` importing `pg` failed lint with "src/pricing must stay pure: no IO imports". The probe was deleted.
 - **Postgres 17 check** (plan 03, throwaway `postgres:17-alpine`):
   - `db:migrate` ran twice, exiting 0 both times.
@@ -38,7 +38,23 @@ Commands were run locally on this branch (macOS, Docker 29). This PR is the firs
 
 ## Qodo Merge review
 
-Pending. Qodo is the only reviewer (no CodeRabbit) and isn't a required check. Every comment will be fixed or replied to before merge.
+Qodo is the only reviewer (no CodeRabbit). It raised 13 findings. All are fixed with tests, one commit each, and every thread has been replied to and resolved.
+
+| # | Finding | Fix |
+|---|---|---|
+| 1 | Integration tests altered the DB in `DATABASE_URL` and failed on a second run | 656ebba: `TEST_DATABASE_URL` only, with a throwaway `hpa_test_<random>` DB per run |
+| 2 | Pool left open when startup fails after the ping | 98cea8a |
+| 3 | A tracing shutdown failure skipped closing the pool | bd96fdf |
+| 4 | A missing fixtures root counted as a clean scan | 9307ca3 |
+| 5 | Unquoted or relative links kept session params | 5cde96d |
+| 6 | Trace provider received unsanitised attributes | a0e3152 |
+| 7 | Sanitiser wrote its output before scanning it | f45f6f6: scan in memory, then atomic write |
+| 8 | CI couldn't detect a leaked ntfy topic | 2682b77: generic ntfy URL and assignment detectors. The README documents that the exact topic can't be checked in PR CI without exposing the secret |
+| 9 | A fresh compose showed every seller disabled | a5ce9c3: one-shot `seed` service before `app` |
+| 10 | Exception text could carry personal data | 22e3855: only name, hash and length are sent |
+| 11 | Purity lint missed env, clock, network and SDKs | 6e63f2a |
+| 12 | Unlisted fixture formats skipped the scan | b8cefd0: scans everything and fails closed on binary |
+| 13 | Size cap of 1600 MB too loose | 1450 MB, baseline +10%, with a re-measure rule |
 
 ## Risks and dependencies
 
@@ -66,7 +82,7 @@ Pending. Qodo is the only reviewer (no CodeRabbit) and isn't a required check. E
 - [x] No secrets, tokens or personal data in code, logs, fixtures or PostHog events
 - [x] Prompts or tool definitions changed, so evals updated: not applicable (no prompts yet)
 - [x] Schema changes have a generated migration (`pnpm db:generate`; never `drizzle-kit push`)
-- [ ] Every Qodo Merge comment fixed or replied to
+- [x] Every Qodo Merge comment fixed or replied to
 - [ ] Owner go-ahead received before merge (Claude never merges)
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
