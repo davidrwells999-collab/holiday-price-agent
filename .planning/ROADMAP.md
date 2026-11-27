@@ -31,7 +31,15 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
   3. A test PR runs lint, Prettier, `tsc`, unit tests, Docker build and a migration check twice on a throwaway Postgres, with our CI jobs (lint, typecheck, unit tests, docker build, migration check, plus evals when triggered, always reporting) as the only required checks; a PR containing a fixture with a token or personal data fails the scan.
   4. `.pr_agent.toml` (Qodo Merge rules, auto /describe and /review), the PR template (with the "fixtures sanitised" checkbox) and Renovate config are in the repo, Renovate/fork PRs skip secret-needing jobs cleanly, and the README lists the branch protection settings with Qodo not a required check.
   5. PR(s) opened, CI green, Qodo Merge review addressed, then STOP for the owner's go-ahead before merge.
-**Plans**: TBD
+**Plans**: 8 plans
+- [ ] 01-01-PLAN.md — Branch on main (after chore/qodo-config), pinned toolchain (owner-approved deps), ESLint/Prettier/tsc/Vitest configs, SELLER_IDS contract
+- [ ] 01-02-PLAN.md — zod env + .env.example, telemetry facade with typed event allow-list, no-op tracing, seller enablement
+- [ ] 01-03-PLAN.md — Drizzle schema (pence, local times, price_basis, natural keys, run/seller_run, append-only observations), generated migrations, idempotent seed, [BLOCKING] Postgres 17 proof
+- [ ] 01-04-PLAN.md — Logger, boot/main, non-root Node 22 + Chromium image, compose with one-shot migrate, [BLOCKING] compose proof
+- [ ] 01-05-PLAN.md — Verify .pr_agent.toml on main (CI-01), PR template, Renovate, evals skeleton + thresholds
+- [ ] 01-06-PLAN.md — Fixture sanitiser, PII/secret scan with self-test, gitleaks config
+- [ ] 01-07-PLAN.md — ci.yml (always-reporting required jobs + ci-success), evals-nightly, README with branch protection
+- [ ] 01-08-PLAN.md — open PR, CI green, address Qodo, STOP for owner go-ahead
 **Research flag**: Skip (standard patterns). Quick checks only: Playwright image choice and `.pr_agent.toml` keys.
 
 ### Phase 2: True-cost calculator and eval harness
