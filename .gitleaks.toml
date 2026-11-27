@@ -1,0 +1,8 @@
+title = "holiday-price-agent gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Only the lockfile (integrity hashes). Test inputs are built at runtime, so no test-file allowlist is needed."
+paths = ['''pnpm-lock\.yaml''']
