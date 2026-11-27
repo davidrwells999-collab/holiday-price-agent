@@ -17,6 +17,8 @@ interface PackageRule {
 interface RenovateConfig {
   extends: string[];
   timezone: string;
+  minimumReleaseAge?: string;
+  internalChecksFilter?: string;
   packageRules: PackageRule[];
 }
 
@@ -57,6 +59,11 @@ describe('renovate.json', () => {
     expect(renovate.extends).toContain('config:recommended');
     expect(renovate.extends).toContain('helpers:pinGitHubActionDigests');
     expect(renovate.timezone).toBe('Europe/London');
+  });
+
+  it('waits before proposing just-published releases (supply-chain buffer)', () => {
+    expect(renovate.minimumReleaseAge).toBe('3 days');
+    expect(renovate.internalChecksFilter).toBe('strict');
   });
 
   it('groups lockstep packages', () => {

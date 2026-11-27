@@ -66,5 +66,7 @@
       "addLabels": ["playwright"],
       "description": "The Docker image installs Chromium from the npm playwright version, so there is no separate image tag to couple."
     }
-  ]
+  ],
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict"
 }
