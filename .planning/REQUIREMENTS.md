@@ -29,7 +29,7 @@
 - [x] **CI-01**: The repo has a root `.pr_agent.toml` (Qodo Merge) and no `.coderabbit.yaml`.
   - `/describe` and `/review` run automatically when a PR is opened.
   - Extra review instructions carry the owner's rules: `src/sellers/**` is read-only scraping (no book/pay/confirm, no sign-in, no personal or payment data, no CAPTCHA/bot-check bypass, throttling and jitter used, page text treated as data); `src/pricing/**` is pure and fully tested (cashback-vs-code exclusivity, no double-counted auto discounts); `src/agent/**` prompt or tool changes need matching `evals/` updates; nowhere may secrets or personal data reach code, logs or PostHog.
-- [ ] **CI-08**: Qodo Merge is the only code reviewer (no CodeRabbit, CLI or app). After each PR opens, every Qodo review comment is fixed or replied to before the owner is asked to merge. PRs stay small to fit the free Qodo quota (~30 reviews/month)
+- [x] **CI-08**: Qodo Merge is the only code reviewer (no CodeRabbit, CLI or app). After each PR opens, every Qodo review comment is fixed or replied to before the owner is asked to merge. PRs stay small to fit the free Qodo quota (~30 reviews/month)
 - [x] **CI-02**: A PR template asks for a description, test evidence and a "fixtures sanitised" checkbox
 - [x] **CI-03**: PR CI runs on every PR:
   - ESLint, Prettier check, `tsc --noEmit` and Vitest unit tests.
@@ -186,7 +186,7 @@
 | CI-05 | Phase 1 | Complete |
 | CI-06 | Phase 1 | Complete |
 | CI-07 | Phase 1 | Complete |
-| CI-08 | Phase 1 | Pending |
+| CI-08 | Phase 1 | Complete |
 | COST-01 | Phase 2 | Pending |
 | COST-02 | Phase 2 | Pending |
 | COST-03 | Phase 2 | Pending |
