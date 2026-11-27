@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DETECTORS, type FindingKind } from './detectors.js';
-import { scanContent, scanPaths } from './scan.js';
+import { scanContent, scanPaths, selfTest } from './scan.js';
 
 // Secret-shaped values are assembled at runtime so this file never trips a secret scanner.
 const samples: Record<Exclude<FindingKind, 'ntfy_topic'>, string> = {
@@ -51,7 +51,7 @@ describe('scanContent', () => {
   });
 
   it.each(Object.entries(samples))('detects kind %s', (kind, sample) => {
-    const found = scanContent(`line ${sample}`, { path: 'a.html', isHtml: true, env: {} });
+    const found = scanContent(sample, { path: 'a.html', isHtml: true, env: {} });
     expect(found.map((f) => f.kind)).toContain(kind);
   });
 
@@ -95,5 +95,11 @@ describe('scanPaths', () => {
 
   it('returns [] for a missing root', () => {
     expect(scanPaths(join(root, 'nope'), { cwd: root, env: {} })).toEqual([]);
+  });
+});
+
+describe('selfTest', () => {
+  it('detects every planted kind', () => {
+    expect(selfTest()).toEqual([]);
   });
 });
