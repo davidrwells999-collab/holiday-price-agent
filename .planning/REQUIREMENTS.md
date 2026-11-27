@@ -39,7 +39,7 @@
 - [ ] **CI-04**: CI enforces ≥ 90% coverage on `src/pricing`
 - [x] **CI-05**: A fixture sanitiser plus a CI secret/PII scan blocks committing personal data or tokens in fixtures
 - [x] **CI-06**: Renovate (or Dependabot) opens grouped dependency PRs, and the CI jobs that need secrets skip cleanly on them
-- [ ] **CI-07**: The README documents the branch protection settings:
+- [x] **CI-07**: The README documents the branch protection settings:
   - Protected `main`, with no direct pushes.
   - Required status checks are our CI jobs only (lint, typecheck, unit tests, evals when triggered, docker build, migration check). Qodo is not a required check.
   - Path-filtered jobs (evals) always report a status so they don't block untouched PRs.
@@ -185,7 +185,7 @@
 | CI-03 | Phase 1 | Complete |
 | CI-05 | Phase 1 | Complete |
 | CI-06 | Phase 1 | Complete |
-| CI-07 | Phase 1 | Pending |
+| CI-07 | Phase 1 | Complete |
 | CI-08 | Phase 1 | Pending |
 | COST-01 | Phase 2 | Pending |
 | COST-02 | Phase 2 | Pending |
