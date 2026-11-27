@@ -5,7 +5,15 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['dist', 'coverage', 'artifacts', 'drizzle', '.planning', 'evals/fixtures'],
+    ignores: [
+      '.claude/**',
+      'dist',
+      'coverage',
+      'artifacts',
+      'drizzle',
+      '.planning',
+      'evals/fixtures',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
