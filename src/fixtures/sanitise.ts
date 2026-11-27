@@ -58,10 +58,21 @@ export function sanitiseHtml(html: string, env: Env = process.env): string {
   out = out.replace(/<!--[\s\S]*?-->/g, '');
   out = out.replace(/\sdata-[\w-]+(?:=(?:"[^"]*"|'[^']*'|[^\s>]*))?/gi, '');
   out = out.replace(/\son\w+=(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '');
+  // Quoted, unquoted and relative values all go through sanitiseUrl (which works on raw strings).
   out = out.replace(
-    /\b(href|src)=(?:"([^"]*)"|'([^']*)')/gi,
-    (_m, attr: string, dq: string | undefined, sq: string | undefined) =>
-      dq !== undefined ? `${attr}="${sanitiseUrl(dq)}"` : `${attr}='${sanitiseUrl(sq ?? '')}'`,
+    /\b(href|src)(\s*=\s*)(?:"([^"]*)"|'([^']*)'|([^\s"'<>`=][^\s"'<>`]*))/gi,
+    (
+      _m,
+      attr: string,
+      eq: string,
+      dq: string | undefined,
+      sq: string | undefined,
+      bare: string | undefined,
+    ) => {
+      if (dq !== undefined) return `${attr}${eq}"${sanitiseUrl(dq)}"`;
+      if (sq !== undefined) return `${attr}${eq}'${sanitiseUrl(sq)}'`;
+      return `${attr}${eq}${sanitiseUrl(bare ?? '')}`;
+    },
   );
   return sanitiseText(out, env);
 }
