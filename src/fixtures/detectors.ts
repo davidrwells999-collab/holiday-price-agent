@@ -7,6 +7,8 @@ export type FindingKind =
   | 'opaque_token'
   | 'cookie_header'
   | 'ntfy_topic'
+  | 'ntfy_url'
+  | 'ntfy_topic_assignment'
   | 'unsanitised_script';
 
 export interface Detector {
@@ -30,6 +32,17 @@ export const DETECTORS: ReadonlyArray<Detector> = [
     kind: 'cookie_header',
     pattern: /^[ \t]*(?:Set-)?Cookie:[^\n]*$/gim,
     replacement: '[REDACTED_COOKIE]',
+  },
+  {
+    // Env-independent: PR CI cannot know the real topic, so flag the shape of an ntfy URL.
+    kind: 'ntfy_url',
+    pattern: /(?:https?:\/\/[A-Za-z0-9.-]*ntfy[A-Za-z0-9.-]*|\bntfy\.sh)\/[A-Za-z0-9_-]+/gi,
+    replacement: '[REDACTED_NTFY_URL]',
+  },
+  {
+    kind: 'ntfy_topic_assignment',
+    pattern: /\bNTFY_TOPIC[ \t]*=[ \t]*["']?[^\s"']+/g,
+    replacement: 'NTFY_TOPIC=[REDACTED_NTFY_TOPIC]',
   },
   {
     kind: 'api_key',
@@ -89,7 +102,13 @@ export function firstMatch(text: string, detector: Detector): string | undefined
 
 /** Masked preview that never reveals more than the first character. */
 export function maskValue(value: string, kind?: FindingKind): string {
-  if (kind === 'ntfy_topic' || value.length === 0) return '***';
+  if (
+    kind === 'ntfy_topic' ||
+    kind === 'ntfy_url' ||
+    kind === 'ntfy_topic_assignment' ||
+    value.length === 0
+  )
+    return '***';
   const first = value.charAt(0);
   return kind === 'email' ? `${first}***@***` : `${first}***`;
 }

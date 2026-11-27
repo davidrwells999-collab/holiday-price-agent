@@ -14,6 +14,8 @@ const samples: Record<Exclude<FindingKind, 'ntfy_topic'>, string> = {
   api_key: 'sk-' + 'ant-' + 'a1'.repeat(20),
   opaque_token: 'Zx9' + 'Qw8'.repeat(12),
   cookie_header: 'Set-' + 'Cookie: sid=1; Path=/',
+  ntfy_url: 'see https://' + 'ntfy.sh/' + 'my-private-topic',
+  ntfy_topic_assignment: 'NTFY_' + 'TOPIC=' + 'my-private-topic',
   unsanitised_script: '<scr' + 'ipt>var a=1</scr' + 'ipt>',
 };
 
@@ -53,6 +55,37 @@ describe('scanContent', () => {
   it.each(Object.entries(samples))('detects kind %s', (kind, sample) => {
     const found = scanContent(sample, { path: 'a.html', isHtml: true, env: {} });
     expect(found.map((f) => f.kind)).toContain(kind);
+  });
+
+  it('flags ntfy URLs on any host containing ntfy, without needing the env topic', () => {
+    const opts = { path: 'a.txt', isHtml: false, env: {} };
+    for (const text of [
+      'curl ntfy.sh/' + 'secret-topic-1',
+      'https://' + 'ntfy.example.com/' + 'secret-topic-2',
+      'http://my-ntfy-box.local/' + 'secret_topic_3',
+    ]) {
+      expect(scanContent(text, opts).map((f) => f.kind)).toContain('ntfy_url');
+    }
+    expect(scanContent('https://example.com/not-related', opts)).toEqual([]);
+  });
+
+  it('flags NTFY_TOPIC assignments without echoing the value', () => {
+    const found = scanContent('NTFY_' + 'TOPIC="' + 'my-private-topic"', {
+      path: 'a.txt',
+      isHtml: false,
+      env: {},
+    });
+    expect(found).toMatchObject([{ kind: 'ntfy_topic_assignment', preview: '***' }]);
+    expect(JSON.stringify(found)).not.toContain('my-private-topic');
+  });
+
+  it('keeps the exact-match env check for local runs', () => {
+    const found = scanContent('plain word ' + 'abcdefghij', {
+      path: 'a.txt',
+      isHtml: false,
+      env: { NTFY_TOPIC: 'abcdefghij' },
+    });
+    expect(found.map((f) => f.kind)).toEqual(['ntfy_topic']);
   });
 
   it('has a sample for every detector kind', () => {

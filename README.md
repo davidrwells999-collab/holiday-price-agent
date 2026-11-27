@@ -89,6 +89,14 @@ Every PR and every push to `main` runs `.github/workflows/ci.yml`. Job ids are t
 
 `evals` always runs and reports a status. When no eval-relevant path changed it reports success without running, and on fork, Renovate and Dependabot PRs (which get no secrets) it also reports success with a job summary note. Those suites run nightly on `main` instead: `evals-nightly` runs at 02:30 UTC and can be started by hand. Without the `ANTHROPIC_API_KEY` secret, the evals step skips with a notice rather than failing.
 
+### Fixtures and the CI scan
+
+`pnpm scan:fixtures` scans every file under `evals/fixtures` (a missing root fails the run). What it can and cannot verify:
+
+- **Can, on PRs:** email addresses, UK phone numbers and postcodes, JWTs, API keys, opaque tokens, cookie headers, `<script>` in HTML, and the shape of an ntfy topic: any `ntfy.sh/<topic>` or `https://<host containing ntfy>/<topic>` URL, and any `NTFY_TOPIC=<value>` assignment. These checks do not depend on the environment.
+- **Cannot, on PRs:** match your actual topic by value. PR CI never receives the `NTFY_TOPIC` secret, because untrusted PR code could print it. A bare topic name that appears outside an ntfy URL or assignment is not caught in CI.
+- **Locally:** if `NTFY_TOPIC` is set in your shell (8+ characters), the scan also flags any occurrence of the exact value. Run `pnpm scan:fixtures` locally before committing new fixtures.
+
 ## Code review workflow
 
 Qodo Merge is the only reviewer. Its free app (about 30 reviews a month) runs `/agentic_describe` and `/agentic_review` automatically when a PR opens, driven by `.pr_agent.toml` on `main`. Every Qodo comment is fixed or replied to before the owner is asked to merge. Keep PRs small to fit the quota.
