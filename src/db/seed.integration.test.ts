@@ -75,7 +75,7 @@ describe.skipIf(!url)('seed (real Postgres)', () => {
     expect(res.rows[0]?.enabled).toBe(false);
   });
 
-  it('rejects UPDATE and DELETE on price_observation', async () => {
+  it('rejects UPDATE, DELETE and TRUNCATE (incl. CASCADE) on price_observation', async () => {
     const run = await db.execute<{ id: string }>(
       sql`insert into run (trigger) values ('manual') returning id`,
     );
@@ -96,5 +96,8 @@ describe.skipIf(!url)('seed (real Postgres)', () => {
       db.execute(sql`update price_observation set headline_price_pence = 1`),
     ).rejects.toThrow();
     await expect(db.execute(sql`delete from price_observation`)).rejects.toThrow();
+    await expect(db.execute(sql`truncate price_observation`)).rejects.toThrow();
+    await expect(db.execute(sql`truncate quote cascade`)).rejects.toThrow();
+    await expect(db.execute(sql`truncate run cascade`)).rejects.toThrow();
   });
 });
