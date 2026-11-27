@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DETECTORS, type FindingKind } from './detectors.js';
-import { scanContent, scanPaths, selfTest } from './scan.js';
+import { FixturesRootNotFoundError, scanContent, scanPaths, selfTest } from './scan.js';
 
 // Secret-shaped values are assembled at runtime so this file never trips a secret scanner.
 const samples: Record<Exclude<FindingKind, 'ntfy_topic'>, string> = {
@@ -93,8 +93,13 @@ describe('scanPaths', () => {
     expect(findings.map((f) => f.path)).toEqual([join('x', 'notes.md')]);
   });
 
-  it('returns [] for a missing root', () => {
-    expect(scanPaths(join(root, 'nope'), { cwd: root, env: {} })).toEqual([]);
+  it('fails explicitly for a missing root', () => {
+    expect(() => scanPaths(join(root, 'nope'), { cwd: root, env: {} })).toThrow(
+      FixturesRootNotFoundError,
+    );
+    expect(() => scanPaths(join(root, 'nope'), { cwd: root, env: {} })).toThrow(
+      /fixtures root not found/,
+    );
   });
 });
 

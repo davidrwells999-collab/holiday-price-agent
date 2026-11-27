@@ -74,8 +74,18 @@ export interface ScanPathsOptions {
   env?: Env;
 }
 
+export class FixturesRootNotFoundError extends Error {
+  constructor(root: string) {
+    super(`fixtures root not found: ${root}`);
+    this.name = 'FixturesRootNotFoundError';
+  }
+}
+
 export function scanPaths(root: string, options: ScanPathsOptions = {}): Finding[] {
-  if (!existsSync(root)) return [];
+  if (!existsSync(root)) {
+    // A configured root that is missing must never read as "clean".
+    throw new FixturesRootNotFoundError(root);
+  }
   const cwd = options.cwd ?? process.cwd();
   const findings: Finding[] = [];
   for (const file of walk(root)) {

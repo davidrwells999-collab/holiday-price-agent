@@ -13,7 +13,13 @@ if (args.includes('--self-test')) {
 }
 
 const root = args.find((a) => !a.startsWith('--')) ?? 'evals/fixtures';
-const findings = scanPaths(root);
+let findings;
+try {
+  findings = scanPaths(root);
+} catch (err) {
+  console.error(`fixture scan FAILED: ${err instanceof Error ? err.message : 'unknown error'}`);
+  process.exit(2);
+}
 for (const f of findings) {
   console.log(`${f.path}:${f.line} ${f.kind} ${f.preview}`);
 }
