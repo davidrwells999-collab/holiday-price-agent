@@ -28,8 +28,7 @@ describe('sanitiseHtml', () => {
   });
 
   it('keeps prices, flight times, dates, airport codes and hotel names', () => {
-    const html =
-      '<p>Rixos Radamis, £1,299 pp, BHX 23:55 to SSH, 12 May 2027, BRS direct</p>';
+    const html = '<p>Rixos Radamis, £1,299 pp, BHX 23:55 to SSH, 12 May 2027, BRS direct</p>';
     expect(sanitiseHtml(html, noEnv)).toBe(html);
   });
 
@@ -41,9 +40,7 @@ describe('sanitiseHtml', () => {
 
 describe('sanitiseText', () => {
   it('redacts emails', () => {
-    expect(sanitiseText('contact jane.doe@example.com', noEnv)).toBe(
-      'contact [REDACTED_EMAIL]',
-    );
+    expect(sanitiseText('contact jane.doe@example.com', noEnv)).toBe('contact [REDACTED_EMAIL]');
   });
 
   it.each(['07700 900123', '+44 7700 900123', '0121 496 0000'])('redacts phone %s', (phone) => {
