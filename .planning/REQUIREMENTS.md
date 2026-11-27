@@ -8,37 +8,37 @@
 ### Foundation (FND)
 
 - [x] **FND-01**: Owner can start the app and Postgres 17 with `docker compose up`. A one-shot `migrate` service applies migrations before the app starts (Node 22, `TZ=Europe/London`, Playwright Chromium in the image)
-- [ ] **FND-02**: Owner configures the app from `.env` (`ANTHROPIC_API_KEY`, `DATABASE_URL`, `NTFY_TOPIC`, optional `POSTHOG_API_KEY`/`POSTHOG_HOST`), validated by zod at startup, with a committed `.env.example`
-- [ ] **FND-03**: The schema stores searches, quotes, append-only price observations, deals, alerts, runs and per-seller runs.
+- [x] **FND-02**: Owner configures the app from `.env` (`ANTHROPIC_API_KEY`, `DATABASE_URL`, `NTFY_TOPIC`, optional `POSTHOG_API_KEY`/`POSTHOG_HOST`), validated by zod at startup, with a committed `.env.example`
+- [x] **FND-03**: The schema stores searches, quotes, append-only price observations, deals, alerts, runs and per-seller runs.
   - Money is integer pence.
   - Flight times are local wall-clock plus airport code.
   - Quotes carry `price_basis`.
   - Quotes are upserted on natural-key unique indexes.
-- [ ] **FND-04**: An idempotent seed creates the Rixos Radamis search:
+- [x] **FND-04**: An idempotent seed creates the Rixos Radamis search:
   - Party: 2A + child 4 + infant, with an optional 3A variant.
   - 7 nights, departures 3–31 May 2027.
   - BRS preferred, BHX acceptable.
   - Room setups: cheapest standard, two standard rooms, family room.
   - Airport cost config.
   - Every value is editable in the database, not hard-coded.
-- [ ] **FND-05**: Each seller can be enabled or disabled through config, with an optional PostHog flag override
-- [ ] **FND-06**: Telemetry goes through a facade that is a no-op when PostHog env is unset, and every event is checked against a typed allow-list
+- [x] **FND-05**: Each seller can be enabled or disabled through config, with an optional PostHog flag override
+- [x] **FND-06**: Telemetry goes through a facade that is a no-op when PostHog env is unset, and every event is checked against a typed allow-list
 
 ### Repo workflow & CI (CI)
 
-- [ ] **CI-01**: The repo has a root `.pr_agent.toml` (Qodo Merge) and no `.coderabbit.yaml`.
+- [x] **CI-01**: The repo has a root `.pr_agent.toml` (Qodo Merge) and no `.coderabbit.yaml`.
   - `/describe` and `/review` run automatically when a PR is opened.
   - Extra review instructions carry the owner's rules: `src/sellers/**` is read-only scraping (no book/pay/confirm, no sign-in, no personal or payment data, no CAPTCHA/bot-check bypass, throttling and jitter used, page text treated as data); `src/pricing/**` is pure and fully tested (cashback-vs-code exclusivity, no double-counted auto discounts); `src/agent/**` prompt or tool changes need matching `evals/` updates; nowhere may secrets or personal data reach code, logs or PostHog.
 - [ ] **CI-08**: Qodo Merge is the only code reviewer (no CodeRabbit, CLI or app). After each PR opens, every Qodo review comment is fixed or replied to before the owner is asked to merge. PRs stay small to fit the free Qodo quota (~30 reviews/month)
-- [ ] **CI-02**: A PR template asks for a description, test evidence and a "fixtures sanitised" checkbox
+- [x] **CI-02**: A PR template asks for a description, test evidence and a "fixtures sanitised" checkbox
 - [x] **CI-03**: PR CI runs on every PR:
   - ESLint, Prettier check, `tsc --noEmit` and Vitest unit tests.
   - Docker image build.
   - A migration check against a throwaway Postgres service.
   - A single always-reporting `ci-success` aggregator check.
 - [ ] **CI-04**: CI enforces ≥ 90% coverage on `src/pricing`
-- [ ] **CI-05**: A fixture sanitiser plus a CI secret/PII scan blocks committing personal data or tokens in fixtures
-- [ ] **CI-06**: Renovate (or Dependabot) opens grouped dependency PRs, and the CI jobs that need secrets skip cleanly on them
+- [x] **CI-05**: A fixture sanitiser plus a CI secret/PII scan blocks committing personal data or tokens in fixtures
+- [x] **CI-06**: Renovate (or Dependabot) opens grouped dependency PRs, and the CI jobs that need secrets skip cleanly on them
 - [ ] **CI-07**: The README documents the branch protection settings:
   - Protected `main`, with no direct pushes.
   - Required status checks are our CI jobs only (lint, typecheck, unit tests, evals when triggered, docker build, migration check). Qodo is not a required check.
@@ -175,16 +175,16 @@
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FND-01 | Phase 1 | Complete |
-| FND-02 | Phase 1 | Pending |
-| FND-03 | Phase 1 | Pending |
-| FND-04 | Phase 1 | Pending |
-| FND-05 | Phase 1 | Pending |
-| FND-06 | Phase 1 | Pending |
-| CI-01 | Phase 1 | Pending |
-| CI-02 | Phase 1 | Pending |
+| FND-02 | Phase 1 | Complete |
+| FND-03 | Phase 1 | Complete |
+| FND-04 | Phase 1 | Complete |
+| FND-05 | Phase 1 | Complete |
+| FND-06 | Phase 1 | Complete |
+| CI-01 | Phase 1 | Complete |
+| CI-02 | Phase 1 | Complete |
 | CI-03 | Phase 1 | Complete |
-| CI-05 | Phase 1 | Pending |
-| CI-06 | Phase 1 | Pending |
+| CI-05 | Phase 1 | Complete |
+| CI-06 | Phase 1 | Complete |
 | CI-07 | Phase 1 | Pending |
 | CI-08 | Phase 1 | Pending |
 | COST-01 | Phase 2 | Pending |
