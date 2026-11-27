@@ -222,31 +222,8 @@ Choose **Renovate** (GitHub app or self-hosted action) with `renovate.json`:
 - Pin GitHub Actions digests with `helpers:pinGitHubActionDigests`.
 - Why not Dependabot: it cannot group across ecosystems as flexibly, cannot do the regex Docker-tag-with-npm-version coupling, and has weaker monorepo-style grouping for the many Mastra packages. Dependabot is acceptable if the owner does not want to install an app (the addendum allows either). (MEDIUM)
 
-### CodeRabbit
-`.coderabbit.yaml` (V2 is the default when `version` is omitted; keys verified in docs.coderabbit.ai/reference/configuration, HIGH):
-```yaml
-language: en-GB
-reviews:
-  profile: chill
-  high_level_summary: true
-  poem: false
-  path_filters:
-    - "!**/pnpm-lock.yaml"
-    - "!evals/fixtures/**"
-    - "!drizzle/meta/**"
-    - "!**/*.png"
-    - "!artifacts/**"
-  path_instructions:
-    - path: "src/sellers/**"
-      instructions: "<addendum text>"
-    - path: "src/pricing/**"
-      instructions: "<addendum text>"
-    - path: "src/agent/**"
-      instructions: "<addendum text>"
-    - path: "**/*"
-      instructions: "No secrets or tokens in code, logs or PostHog events. No personal data sent to PostHog."
-```
-Not verified: a public schema URL for editor validation (the page did not list one; add `# yaml-language-server: $schema=...` only after confirming). Branch protection "CodeRabbit comments resolved" is a GitHub branch-protection setting (require conversation resolution), not a CodeRabbit config key. A `request_changes_workflow` key was not found in the docs, so do not use it. (MEDIUM)
+### Code review
+- **Owner decision (2026-11-27):** no CodeRabbit. Qodo Merge via a root `.pr_agent.toml` is the only reviewer and is never a required check. Keys: `[github_app] pr_commands = ["/agentic_describe", "/agentic_review"]`, `[qodo_describe_agent]`, `[review_agent] issues_user_guidelines` / `compliance_user_guidelines`. Qodo reads config from the default branch only.
 
 ## Supporting Libraries
 | Library | Version | Purpose | When to Use |
@@ -309,7 +286,7 @@ Pin exact versions (`save-exact=true` in `.npmrc`); let Renovate move them. Add 
 | Playwright Docker details (bundled Node, shm) | MEDIUM/LOW | tag existence verified; rest from knowledge |
 | PostHog (`@posthog/ai` export names, `captureImmediate`) | MEDIUM | package versions and Mastra page verified; method names from knowledge |
 | `runEvals` import path | MEDIUM | docs example uses `@mastra/core/evals` |
-| CodeRabbit keys | HIGH | official reference |
+| Qodo `.pr_agent.toml` keys | MEDIUM | docs.qodo.ai configuration reference, 2026-11-26 |
 
 ## Sources
 - npm registry (`npm view`) for all versions, engines and peer ranges, 2026-11-26
@@ -322,6 +299,6 @@ Pin exact versions (`save-exact=true` in `.npmrc`); let Renovate move them. Add 
 - https://mastra.ai/models/providers/anthropic
 - https://posthog.com/docs/llm-analytics/installation/mastra
 - https://orm.drizzle.team/docs/migrations
-- https://docs.coderabbit.ai/reference/configuration
+- https://docs.qodo.ai/configuration/configuration-and-command-reference
 - https://mcr.microsoft.com/v2/playwright/tags/list (tag v1.65.1-noble exists)
 - GitHub releases API for the Actions versions listed

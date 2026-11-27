@@ -1,6 +1,10 @@
 ## Addendum: workflow, CI/CD, evals, observability
 
-### Code review — LATEST (supersedes both sections below)
+### Code review — FINAL (2026-11-27, supersedes everything below)
+- No CodeRabbit at all: no app, no CLI, no `.coderabbit.yaml`. Qodo Merge (`.pr_agent.toml`) is the only reviewer and is not a required check.
+- The repo is public (owner decision), so branch protection is available on GitHub's free plan.
+
+### Code review — earlier (superseded)
 Code review change: no paid CodeRabbit.
 - PR reviewer = Qodo Merge (free tier, GitHub app, ~30 reviews/month). Owner installs it on davidrwells999-collab/holiday-price-agent.
 - Replace .coderabbit.yaml with Qodo config: add a `.pr_agent.toml` at repo root carrying the same review rules (read-only scraping / no booking or CAPTCHA bypass in src/sellers, pure + tested pricing in src/pricing, eval updates required for src/agent changes, no secrets or personal data in logs/PostHog). Enable /describe and /review on PR open.
