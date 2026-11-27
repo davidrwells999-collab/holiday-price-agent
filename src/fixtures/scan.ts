@@ -27,7 +27,23 @@ export interface ScanOptions {
   env?: Env;
 }
 
-const SCANNED_EXTENSIONS = new Set(['.txt', '.html', '.json', '.md']);
+const HTML_EXTENSIONS = new Set(['.html', '.htm', '.mhtml']);
+
+/** True for files the sanitiser and scanner treat as HTML (script tags are flagged). */
+export const isHtmlPath = (path: string): boolean =>
+  HTML_EXTENSIONS.has(extname(path).toLowerCase());
+
+const utf8 = new TextDecoder('utf-8', { fatal: true });
+
+/** Decodes as UTF-8 text, or returns undefined for binary / undecodable content. */
+function decodeText(buf: Buffer): string | undefined {
+  if (buf.includes(0)) return undefined;
+  try {
+    return utf8.decode(buf);
+  } catch {
+    return undefined;
+  }
+}
 
 export function scanContent(content: string, options: ScanOptions): Finding[] {
   const env = options.env ?? process.env;
@@ -89,14 +105,19 @@ export function scanPaths(root: string, options: ScanPathsOptions = {}): Finding
   const cwd = options.cwd ?? process.cwd();
   const findings: Finding[] = [];
   for (const file of walk(root)) {
-    const ext = extname(file).toLowerCase();
-    if (!SCANNED_EXTENSIONS.has(ext)) continue;
     // README.md at the fixtures root documents the rules and may mention examples.
     if (relative(root, file) === 'README.md') continue;
+    const path = relative(cwd, file);
+    // Every file is scanned; anything that is not decodable text fails closed.
+    const text = decodeText(readFileSync(file));
+    if (text === undefined) {
+      findings.push({ path, line: 1, kind: 'unscanned_file_type', preview: '***' });
+      continue;
+    }
     findings.push(
-      ...scanContent(readFileSync(file, 'utf8'), {
-        path: relative(cwd, file),
-        isHtml: ext === '.html',
+      ...scanContent(text, {
+        path,
+        isHtml: isHtmlPath(file),
         ...(options.env ? { env: options.env } : {}),
       }),
     );
@@ -110,7 +131,7 @@ export function scanPaths(root: string, options: ScanPathsOptions = {}): Finding
  */
 export function selfTest(): FindingKind[] {
   const topic = 'self-test-' + 'topic';
-  const planted: Record<FindingKind, { file: string; text: string }> = {
+  const planted: Record<FindingKind, { file: string; text: string | Buffer }> = {
     email: { file: 'a.txt', text: 'jane.doe' + '@' + 'example.com' },
     uk_phone: { file: 'b.txt', text: '07700 ' + '900123' },
     uk_postcode: { file: 'c.txt', text: 'B26 ' + '3QJ' },
@@ -121,13 +142,14 @@ export function selfTest(): FindingKind[] {
     ntfy_topic: { file: 'h.txt', text: topic },
     ntfy_url: { file: 'h2.txt', text: 'https://' + 'ntfy.sh/' + 'some-topic-name' },
     ntfy_topic_assignment: { file: 'h3.txt', text: 'NTFY_' + 'TOPIC=' + 'some-topic-name' },
+    unscanned_file_type: { file: 'j.bin', text: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0, 1, 2]) },
     unsanitised_script: { file: 'i.html', text: '<scr' + 'ipt>1</scr' + 'ipt>' },
   };
   const dir = mkdtempSync(join(tmpdir(), 'fixture-selftest-'));
   try {
     mkdirSync(join(dir, 'planted'));
     for (const { file, text } of Object.values(planted)) {
-      writeFileSync(join(dir, 'planted', file), `${text}\n`);
+      writeFileSync(join(dir, 'planted', file), typeof text === 'string' ? `${text}\n` : text);
     }
     const found = new Set(
       scanPaths(dir, { cwd: dir, env: { NTFY_TOPIC: topic } }).map((f) => f.kind),

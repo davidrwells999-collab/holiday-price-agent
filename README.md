@@ -90,7 +90,7 @@ Every PR and every push to `main` runs `.github/workflows/ci.yml`. Job ids are t
 
 ### Fixtures and the CI scan
 
-`pnpm scan:fixtures` scans every file under `evals/fixtures` (a missing root fails the run). What it can and cannot verify:
+`pnpm scan:fixtures` scans every file under `evals/fixtures` (a missing root fails the run; text-like files are scanned as text, `.htm`/`.mhtml` as HTML, and binary or undecodable files fail as `unscanned_file_type`). What it can and cannot verify:
 
 - **Can, on PRs:** email addresses, UK phone numbers and postcodes, JWTs, API keys, opaque tokens, cookie headers, `<script>` in HTML, and the shape of an ntfy topic: any `ntfy.sh/<topic>` or `https://<host containing ntfy>/<topic>` URL, and any `NTFY_TOPIC=<value>` assignment. These checks do not depend on the environment.
 - **Cannot, on PRs:** match your actual topic by value. PR CI never receives the `NTFY_TOPIC` secret, because untrusted PR code could print it. A bare topic name that appears outside an ntfy URL or assignment is not caught in CI.

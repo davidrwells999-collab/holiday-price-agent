@@ -1,7 +1,7 @@
 import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, extname, join, basename } from 'node:path';
+import { dirname, join, basename } from 'node:path';
 import { sanitiseHtml, sanitiseText } from './sanitise.js';
-import { scanContent, type Finding } from './scan.js';
+import { isHtmlPath, scanContent, type Finding } from './scan.js';
 
 type Env = Readonly<Record<string, string | undefined>>;
 
@@ -22,7 +22,7 @@ export function sanitiseFile(
   /** Test seam: replaces the sanitiser to simulate content it fails to clean. */
   transform?: (raw: string, isHtml: boolean) => string,
 ): SanitiseFileResult {
-  const isHtml = extname(input).toLowerCase() === '.html';
+  const isHtml = isHtmlPath(input);
   const raw = readFileSync(input, 'utf8');
   const clean = transform
     ? transform(raw, isHtml)

@@ -6,7 +6,7 @@ import { DETECTORS, type FindingKind } from './detectors.js';
 import { FixturesRootNotFoundError, scanContent, scanPaths, selfTest } from './scan.js';
 
 // Secret-shaped values are assembled at runtime so this file never trips a secret scanner.
-const samples: Record<Exclude<FindingKind, 'ntfy_topic'>, string> = {
+const samples: Record<Exclude<FindingKind, 'ntfy_topic' | 'unscanned_file_type'>, string> = {
   email: 'jane.doe' + '@' + 'example.com',
   uk_phone: '07700 ' + '900123',
   uk_postcode: 'B26 ' + '3QJ',
@@ -124,6 +124,52 @@ describe('scanPaths', () => {
     writeFileSync(join(root, 'x', 'notes.md'), `${samples.email}\n`);
     const findings = scanPaths(root, { cwd: root, env: {} });
     expect(findings.map((f) => f.path)).toEqual([join('x', 'notes.md')]);
+  });
+
+  it('scans .har, .xml, .yaml, .csv and unknown extensions as text', () => {
+    const cookie = 'Cookie: sid=1';
+    for (const name of ['a.har', 'b.xml', 'c.yaml', 'd.csv', 'e.js', 'f.weird']) {
+      writeFileSync(join(root, name), `${cookie}\n`);
+    }
+    const findings = scanPaths(root, { cwd: root, env: {} });
+    expect(findings.map((f) => f.path).sort()).toEqual(
+      ['a.har', 'b.xml', 'c.yaml', 'd.csv', 'e.js', 'f.weird'].sort(),
+    );
+    expect(findings.every((f) => f.kind === 'cookie_header')).toBe(true);
+  });
+
+  it('flags a .har with a cookie header inside JSON', () => {
+    writeFileSync(
+      join(root, 'trace.har'),
+      '{"log":{"entries":[{"request":{"headers":[{"name":"Cookie","value":"sid=1"}]}}]}}\n' +
+        'Set-' +
+        'Cookie: sid=1\n',
+    );
+    const findings = scanPaths(root, { cwd: root, env: {} });
+    expect(findings.map((f) => f.kind)).toContain('cookie_header');
+  });
+
+  it('treats .htm and .mhtml as HTML (script tags flagged)', () => {
+    const script = '<scr' + 'ipt>1</scr' + 'ipt>\n';
+    writeFileSync(join(root, 'a.htm'), script);
+    writeFileSync(join(root, 'b.mhtml'), script);
+    const findings = scanPaths(root, { cwd: root, env: {} });
+    expect(findings.map((f) => f.kind)).toEqual(['unsanitised_script', 'unsanitised_script']);
+  });
+
+  it('flags binary and undecodable files as unscanned_file_type without echoing content', () => {
+    writeFileSync(join(root, 'shot.png'), Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0x01]));
+    writeFileSync(join(root, 'bad.txt'), Buffer.from([0xff, 0xfe, 0xfd, 0x41]));
+    const findings = scanPaths(root, { cwd: root, env: {} });
+    expect(findings.map((f) => [f.path, f.kind]).sort()).toEqual([
+      ['bad.txt', 'unscanned_file_type'],
+      ['shot.png', 'unscanned_file_type'],
+    ]);
+  });
+
+  it('scans .gitkeep placeholders as text and does not flag them', () => {
+    writeFileSync(join(root, '.gitkeep'), '');
+    expect(scanPaths(root, { cwd: root, env: {} })).toEqual([]);
   });
 
   it('fails explicitly for a missing root', () => {
