@@ -1,0 +1,70 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests", ":dependencyDashboard"],
+  "timezone": "Europe/London",
+  "schedule": ["before 6am on monday"],
+  "rangeStrategy": "pin",
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 3,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "packageRules": [
+    {
+      "groupName": "vitest",
+      "matchPackageNames": ["vitest", "@vitest/**"]
+    },
+    {
+      "groupName": "drizzle",
+      "matchPackageNames": ["drizzle-orm", "drizzle-kit"],
+      "allowedVersions": "<1.0.0"
+    },
+    {
+      "groupName": "lint and format",
+      "matchPackageNames": [
+        "eslint",
+        "@eslint/**",
+        "typescript-eslint",
+        "eslint-config-prettier",
+        "prettier",
+        "globals"
+      ]
+    },
+    {
+      "groupName": "mastra",
+      "matchPackageNames": ["@mastra/**", "mastra"]
+    },
+    {
+      "groupName": "posthog",
+      "matchPackageNames": ["posthog-node", "@posthog/**"]
+    },
+    {
+      "groupName": "github actions",
+      "matchManagers": ["github-actions"]
+    },
+    {
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<6.1.0"
+    },
+    {
+      "matchPackageNames": ["@types/node"],
+      "allowedVersions": "<23.0.0"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["node"],
+      "allowedVersions": "/^22\\./"
+    },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["postgres"],
+      "allowedVersions": "/^17\\./"
+    },
+    {
+      "matchPackageNames": ["playwright"],
+      "addLabels": ["playwright"],
+      "description": "The Docker image installs Chromium from the npm playwright version, so there is no separate image tag to couple."
+    }
+  ]
+}
