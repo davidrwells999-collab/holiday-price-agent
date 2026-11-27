@@ -15,6 +15,7 @@ export interface BootDeps {
   loadSellerConfig?: (db: Db) => Promise<{ id: string; enabled: boolean }[]>;
   pingDb?: (pool: Pool) => Promise<void>;
   logDestination?: DestinationStream;
+  tracingProvider?: Tracing;
 }
 
 export interface AppContext {
@@ -40,7 +41,7 @@ export async function boot(deps: BootDeps = {}): Promise<AppContext> {
   const logger = createLogger(env.LOG_LEVEL, deps.logDestination);
 
   const telemetry = createTelemetry(env);
-  const tracing = createTracing(env);
+  const tracing = createTracing(env, { provider: deps.tracingProvider });
   logger.info(
     {
       posthog: env.POSTHOG_API_KEY ? 'key_set_backend_noop_until_phase_3' : 'disabled',
@@ -75,9 +76,14 @@ export async function boot(deps: BootDeps = {}): Promise<AppContext> {
   let closing: Promise<void> | undefined;
   const shutdown = (): Promise<void> => {
     closing ??= (async () => {
-      await telemetry.shutdown(5000);
-      await tracing.shutdown(5000);
-      await pool.end();
+      // Always close the pool, even if telemetry or tracing shutdown rejects; then surface failures.
+      const results = await Promise.allSettled([telemetry.shutdown(5000), tracing.shutdown(5000)]);
+      results.push(...(await Promise.allSettled([pool.end()])));
+      const failures = results.flatMap((r) =>
+        r.status === 'rejected' ? [r.reason as unknown] : [],
+      );
+      if (failures.length === 1) throw failures[0];
+      if (failures.length > 1) throw new AggregateError(failures, 'shutdown_failed');
     })();
     return closing;
   };

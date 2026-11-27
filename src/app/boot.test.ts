@@ -121,6 +121,22 @@ describe('boot', () => {
     expect(end).toHaveBeenCalledTimes(1);
   });
 
+  it('closes the pool even when tracing shutdown rejects, then surfaces the failure', async () => {
+    const boom = new Error('tracing_shutdown_failed');
+    const tracingProvider = {
+      enabled: true,
+      withSpan: (_n: unknown, _a: unknown, fn: (s: unknown) => Promise<unknown>) => fn({}),
+      shutdown: () => Promise.reject(boom),
+    };
+    const { deps, end } = makeDeps({
+      envSource: { ...validEnv, OTEL_EXPORTER_OTLP_ENDPOINT: 'http://otel.example.com:4318' },
+      tracingProvider: tracingProvider as unknown as BootDeps['tracingProvider'],
+    });
+    const ctx = await boot(deps);
+    await expect(ctx.shutdown()).rejects.toBe(boom);
+    expect(end).toHaveBeenCalledTimes(1);
+  });
+
   it('shutdown is idempotent and ends the pool once', async () => {
     const { deps, end } = makeDeps();
     const ctx = await boot(deps);
