@@ -32,7 +32,7 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
   4. `.pr_agent.toml` (Qodo Merge rules, auto /describe and /review), the PR template (with the "fixtures sanitised" checkbox) and Renovate config are in the repo, Renovate/fork PRs skip secret-needing jobs cleanly, and the README lists the branch protection settings with Qodo not a required check.
   5. PR(s) opened, CI green, Qodo Merge review addressed, then STOP for the owner's go-ahead before merge.
 **Plans**: 8 plans
-- [ ] 01-01-PLAN.md — Branch on main (after chore/qodo-config), pinned toolchain (owner-approved deps), ESLint/Prettier/tsc/Vitest configs, SELLER_IDS contract
+- [x] 01-01-PLAN.md — Branch on main (after chore/qodo-config), pinned toolchain (owner-approved deps), ESLint/Prettier/tsc/Vitest configs, SELLER_IDS contract
 - [ ] 01-02-PLAN.md — zod env + .env.example, telemetry facade with typed event allow-list, no-op tracing, seller enablement
 - [ ] 01-03-PLAN.md — Drizzle schema (pence, local times, price_basis, natural keys, run/seller_run, append-only observations), generated migrations, idempotent seed, [BLOCKING] Postgres 17 proof
 - [ ] 01-04-PLAN.md — Logger, boot/main, non-root Node 22 + Chromium image, compose with one-shot migrate, [BLOCKING] compose proof
@@ -138,7 +138,7 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold, review config, PR template, CI | 0/TBD | Not started | - |
+| 1. Scaffold, review config, PR template, CI | 1/8 | In Progress|  |
 | 2. True-cost calculator and eval harness | 0/TBD | Not started | - |
 | 3. Jet2 end to end, extraction eval, PostHog | 0/TBD | Not started | - |
 | 4. Deals scraper and deals eval | 0/TBD | Not started | - |
