@@ -59,9 +59,13 @@ export function sanitiseHtml(html: string, env: Env = process.env): string {
   out = out.replace(/\sdata-[\w-]+(?:=(?:"[^"]*"|'[^']*'|[^\s>]*))?/gi, '');
   out = out.replace(/\son\w+=(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '');
   out = out.replace(
-    /\b(href|src)=(?:"([^"]*)"|'([^']*)')/gi,
-    (_m, attr: string, dq: string | undefined, sq: string | undefined) =>
-      dq !== undefined ? `${attr}="${sanitiseUrl(dq)}"` : `${attr}='${sanitiseUrl(sq ?? '')}'`,
+    /\b(href|src)=(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi,
+    (_m, attr: string, dq: string | undefined, sq: string | undefined, bare: string | undefined) =>
+      dq !== undefined
+        ? `${attr}="${sanitiseUrl(dq)}"`
+        : sq !== undefined
+          ? `${attr}='${sanitiseUrl(sq)}'`
+          : `${attr}=${sanitiseUrl(bare ?? '')}`,
   );
   return sanitiseText(out, env);
 }
