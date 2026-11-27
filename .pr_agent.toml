@@ -11,6 +11,11 @@
 [github_app]
 # Run describe and review automatically when a PR is opened, reopened or marked ready.
 pr_commands = ["/agentic_describe", "/agentic_review"]
+# Re-review follow-up commits pushed to an open PR (incremental review is on by
+# default), so changes made after the first review are still reviewed.
+# Each push uses free-tier quota, so push fixes in batches, not one by one.
+handle_push_trigger = true
+push_commands = ["/agentic_review"]
 
 [qodo_describe_agent]
 publish_mode = "comment"
