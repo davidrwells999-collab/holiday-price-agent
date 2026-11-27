@@ -35,7 +35,7 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
 - [x] 01-01-PLAN.md — Branch on main (after chore/qodo-config), pinned toolchain (owner-approved deps), ESLint/Prettier/tsc/Vitest configs, SELLER_IDS contract
 - [x] 01-02-PLAN.md — zod env + .env.example, telemetry facade with typed event allow-list, no-op tracing, seller enablement
 - [x] 01-03-PLAN.md — Drizzle schema (pence, local times, price_basis, natural keys, run/seller_run, append-only observations), generated migrations, idempotent seed, [BLOCKING] Postgres 17 proof
-- [ ] 01-04-PLAN.md — Logger, boot/main, non-root Node 22 + Chromium image, compose with one-shot migrate, [BLOCKING] compose proof
+- [x] 01-04-PLAN.md — Logger, boot/main, non-root Node 22 + Chromium image, compose with one-shot migrate, [BLOCKING] compose proof
 - [x] 01-05-PLAN.md — Verify .pr_agent.toml on main (CI-01), PR template, Renovate, evals skeleton + thresholds
 - [x] 01-06-PLAN.md — Fixture sanitiser, PII/secret scan with self-test, gitleaks config
 - [ ] 01-07-PLAN.md — ci.yml (always-reporting required jobs + ci-success), evals-nightly, README with branch protection
@@ -138,7 +138,7 @@ A personal, read-only package-holiday price watcher: a deterministic scraping pi
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Scaffold, review config, PR template, CI | 5/8 | In Progress|  |
+| 1. Scaffold, review config, PR template, CI | 6/8 | In Progress|  |
 | 2. True-cost calculator and eval harness | 0/TBD | Not started | - |
 | 3. Jet2 end to end, extraction eval, PostHog | 0/TBD | Not started | - |
 | 4. Deals scraper and deals eval | 0/TBD | Not started | - |
