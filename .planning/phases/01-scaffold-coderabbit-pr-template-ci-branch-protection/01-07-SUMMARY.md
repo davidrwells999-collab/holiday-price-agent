@@ -19,7 +19,7 @@ key-files:
 decisions:
   - "Required checks are our CI job ids only (plus ci-success); Qodo Merge is never required"
   - "evals always runs and decides internally; no workflow-level paths filters"
-  - "Image size limit 700 MB (541 MB measured, plus 25%, rounded up to 100 MB)"
+  - "Image size limit 1450 MB (corrected on PR #2: CI measures the unpacked linux/amd64 image at 1317 MB, so the limit is that plus ~10%; the earlier 700 MB came from Docker Desktop's compressed 541 MB figure to 100 MB)"
 requirements-completed: [CI-03, CI-05, CI-06, CI-07]
 metrics:
   completed: 2026-11-27
