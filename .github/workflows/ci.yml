@@ -177,8 +177,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      # Measured image is about 541 MB (plan 04); limit is that plus ~25%, rounded up to 100 MB.
-      IMAGE_SIZE_LIMIT_MB: '700'
+      # Uncompressed linux/amd64 size as measured by this job: 1317 MB on the first CI run (PR #2).
+      # (Docker Desktop's containerd store reports the compressed size, ~541 MB, so local numbers are not comparable.)
+      # Limit = measured + ~15%, rounded up to 100 MB. Catches regressions such as extra browsers or dev deps.
+      IMAGE_SIZE_LIMIT_MB: '1600'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
