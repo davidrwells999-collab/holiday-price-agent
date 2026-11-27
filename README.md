@@ -21,22 +21,29 @@ The seed only inserts missing rows, so any edits you make to seeded rows are kep
 
 ## Local development
 
-| Script                  | What it does                                                      |
-| ----------------------- | ----------------------------------------------------------------- |
-| `pnpm lint`             | ESLint                                                            |
-| `pnpm format`           | Prettier, write                                                   |
-| `pnpm format:check`     | Prettier, check only                                              |
-| `pnpm typecheck`        | `tsc --noEmit`                                                    |
-| `pnpm test`             | Unit tests                                                        |
-| `pnpm test:coverage`    | Unit tests with coverage                                          |
-| `pnpm test:integration` | DB integration tests (needs `DATABASE_URL`, use `localhost:5432`) |
-| `pnpm test:evals`       | Eval suites (model-backed suites need `ANTHROPIC_API_KEY`)        |
-| `pnpm db:generate`      | Generate a migration from `src/db/schema.ts`                      |
-| `pnpm db:check`         | Check migration consistency                                       |
-| `pnpm db:migrate`       | Apply migrations                                                  |
-| `pnpm db:seed`          | Seed reference data (idempotent)                                  |
-| `pnpm scan:fixtures`    | Scan eval fixtures for tokens and personal data                   |
-| `pnpm sanitise:fixture` | Sanitise a saved page before committing it as a fixture           |
+| Script                  | What it does                                                |
+| ----------------------- | ----------------------------------------------------------- |
+| `pnpm lint`             | ESLint                                                      |
+| `pnpm format`           | Prettier, write                                             |
+| `pnpm format:check`     | Prettier, check only                                        |
+| `pnpm typecheck`        | `tsc --noEmit`                                              |
+| `pnpm test`             | Unit tests                                                  |
+| `pnpm test:coverage`    | Unit tests with coverage                                    |
+| `pnpm test:integration` | DB integration tests (needs `TEST_DATABASE_URL`, see below) |
+| `pnpm test:evals`       | Eval suites (model-backed suites need `ANTHROPIC_API_KEY`)  |
+| `pnpm db:generate`      | Generate a migration from `src/db/schema.ts`                |
+| `pnpm db:check`         | Check migration consistency                                 |
+| `pnpm db:migrate`       | Apply migrations                                            |
+| `pnpm db:seed`          | Seed reference data (idempotent)                            |
+| `pnpm scan:fixtures`    | Scan eval fixtures for tokens and personal data             |
+| `pnpm sanitise:fixture` | Sanitise a saved page before committing it as a fixture     |
+
+Integration tests read `TEST_DATABASE_URL` only, never `DATABASE_URL`. They create a uniquely named throwaway database (`hpa_test_<random>`) on that server, migrate it, and drop it afterwards, so re-runs pass and your real data is untouched. The role needs `CREATEDB`. Without the variable they skip with a message (`REQUIRE_DB_TESTS=1` makes that a failure):
+
+```sh
+docker run -d --name hpa-test-pg -e POSTGRES_PASSWORD=test -p 54329:5432 postgres:17.12-alpine
+TEST_DATABASE_URL=postgres://postgres:test@localhost:54329/postgres pnpm test:integration
+```
 
 Migrations: change `src/db/schema.ts`, run `pnpm db:generate`, and commit the generated SQL. Never use `drizzle-kit push`, and never edit a migration that has been merged.
 

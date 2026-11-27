@@ -4,26 +4,39 @@ import { createDb } from './client.js';
 import type { Db } from './client.js';
 import { runMigrations } from './migrate.js';
 import { seed } from './seed.js';
+import { createThrowawayDb, type ThrowawayDb } from './test-db.js';
 
-const url = process.env.DATABASE_URL;
+// Integration tests never use DATABASE_URL (which may point at real data). They create and
+// drop their own uniquely named database on the TEST_DATABASE_URL server.
+const baseUrl = process.env.TEST_DATABASE_URL;
+const url = baseUrl;
 
-if (!url && process.env.REQUIRE_DB_TESTS === '1') {
-  throw new Error('REQUIRE_DB_TESTS=1 but DATABASE_URL is not set; DB tests must not skip');
+if (!url) {
+  const msg = 'TEST_DATABASE_URL is not set; skipping DB integration tests';
+  if (process.env.REQUIRE_DB_TESTS === '1') {
+    throw new Error(
+      `REQUIRE_DB_TESTS=1 but ${msg.replace('; skipping DB integration tests', '')}; DB tests must not skip`,
+    );
+  }
+  process.stderr.write(`${msg}\n`);
 }
 
 describe.skipIf(!url)('seed (real Postgres)', () => {
   let db: Db;
   let end: () => Promise<void>;
+  let throwaway: ThrowawayDb;
 
   beforeAll(async () => {
-    await runMigrations(url as string);
-    const created = createDb(url as string);
+    throwaway = await createThrowawayDb(baseUrl as string);
+    await runMigrations(throwaway.url);
+    const created = createDb(throwaway.url);
     db = created.db;
     end = () => created.pool.end();
   });
 
   afterAll(async () => {
-    await end();
+    await end?.();
+    await throwaway?.drop();
   });
 
   async function count(table: string): Promise<number> {
