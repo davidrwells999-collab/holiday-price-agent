@@ -13,11 +13,10 @@ A personal, self-hosted agent that watches package-holiday prices across UK tour
 ```sh
 cp .env.example .env        # then fill in real values
 docker compose up -d
-docker compose run --rm app node dist/db/seed.js   # safe to rerun
 docker compose logs app     # look for app_ready
 ```
 
-The seed only inserts missing rows, so any edits you make to seeded rows are kept.
+Compose runs `migrate` then `seed` as one-shot services before `app` starts, so no manual seed step is needed. The seed only inserts missing rows, so any edits you make to seeded rows are kept.
 
 ## Local development
 

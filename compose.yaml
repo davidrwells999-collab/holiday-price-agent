@@ -33,13 +33,24 @@ services:
         condition: service_healthy
     restart: 'no'
 
+  seed:
+    <<: *app-image
+    command: ['node', 'dist/db/seed.js']
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set DATABASE_URL in .env}
+      TZ: Europe/London
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: 'no'
+
   app:
     <<: *app-image
     env_file: .env
     environment:
       TZ: Europe/London
     depends_on:
-      migrate:
+      seed:
         condition: service_completed_successfully
     init: true
     shm_size: '1gb'
