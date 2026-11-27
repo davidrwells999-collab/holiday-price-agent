@@ -1,0 +1,316 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Job ids are the required status check names. Do not rename them without
+# updating the "Branch protection" section of README.md.
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Format check
+        run: pnpm format:check
+
+  typecheck:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm typecheck
+
+  unit-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests with coverage
+        run: |
+          set -o pipefail
+          pnpm test:coverage | tee "$RUNNER_TEMP/coverage.txt"
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/coverage.txt" ]; then
+            {
+              echo '### Coverage'
+              echo '```'
+              cat "$RUNNER_TEMP/coverage.txt"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # Always runs and decides internally, so branch protection never waits on a
+  # path-filtered job that did not start.
+  evals:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Detect eval-relevant changes
+        id: changes
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          PUSH_SHA: ${{ github.sha }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BASE_SHA="$PR_BASE_SHA"
+            HEAD_SHA="$PR_HEAD_SHA"
+          else
+            BASE_SHA="$PUSH_BEFORE_SHA"
+            HEAD_SHA="$PUSH_SHA"
+          fi
+          relevant=false
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] \
+            || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            # No usable base (new branch, force push): treat as relevant to be safe.
+            relevant=true
+          elif git diff --name-only "$BASE_SHA" "$HEAD_SHA" | grep -Eq '^(src/agent/|src/sellers/|src/deals/|evals/|prompts/)'; then
+            relevant=true
+          fi
+          echo "relevant=$relevant" >> "$GITHUB_OUTPUT"
+      - name: Decide whether secrets are available
+        id: trust
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          THIS_REPO: ${{ github.repository }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          trusted=false
+          if [ "$EVENT_NAME" != "pull_request" ]; then
+            trusted=true
+          elif [ "$HEAD_REPO" = "$THIS_REPO" ] && [ "$PR_AUTHOR" != "renovate[bot]" ] && [ "$PR_AUTHOR" != "dependabot[bot]" ]; then
+            trusted=true
+          fi
+          echo "trusted=$trusted" >> "$GITHUB_OUTPUT"
+      - name: Report skip (no eval-relevant changes)
+        if: steps.changes.outputs.relevant != 'true'
+        run: echo "evals - no eval-relevant changes" >> "$GITHUB_STEP_SUMMARY"
+      - name: Report skip (fork or bot PR)
+        if: steps.changes.outputs.relevant == 'true' && steps.trust.outputs.trusted != 'true'
+        run: echo "evals skipped - no secrets on fork/bot PRs; they run nightly on main" >> "$GITHUB_STEP_SUMMARY"
+      - name: Set up pnpm
+        if: steps.changes.outputs.relevant == 'true' && steps.trust.outputs.trusted == 'true'
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - name: Set up Node
+        if: steps.changes.outputs.relevant == 'true' && steps.trust.outputs.trusted == 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        if: steps.changes.outputs.relevant == 'true' && steps.trust.outputs.trusted == 'true'
+        run: pnpm install --frozen-lockfile
+      - name: Run evals
+        if: steps.changes.outputs.relevant == 'true' && steps.trust.outputs.trusted == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "evals skipped - ANTHROPIC_API_KEY secret not configured" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          pnpm test:evals
+
+  docker-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      # Measured image is about 541 MB (plan 04); limit is that plus ~25%, rounded up to 100 MB.
+      IMAGE_SIZE_LIMIT_MB: '700'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build runtime image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          target: runtime
+          push: false
+          load: true
+          tags: holiday-price-agent:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Node version is 22.x
+        run: |
+          v=$(docker run --rm holiday-price-agent:ci node -v)
+          echo "node $v"
+          case "$v" in v22.*) ;; *) echo "expected Node 22, got $v" >&2; exit 1 ;; esac
+      - name: Runs as non-root uid 10001
+        run: |
+          uid=$(docker run --rm holiday-price-agent:ci id -u)
+          echo "uid $uid"
+          [ "$uid" = "10001" ]
+      - name: Browser smoke test
+        run: docker run --rm --shm-size=1g holiday-price-agent:ci node dist/cli/browser-smoke.js
+      - name: Image size limit
+        run: |
+          bytes=$(docker image inspect --format '{{.Size}}' holiday-price-agent:ci)
+          mb=$((bytes / 1000000))
+          echo "image size: ${mb} MB (limit ${IMAGE_SIZE_LIMIT_MB} MB)" | tee -a "$GITHUB_STEP_SUMMARY"
+          [ "$mb" -lt "$IMAGE_SIZE_LIMIT_MB" ]
+
+  migration-check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17.12-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Dummy credentials for an ephemeral service container; not secrets.
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+      REQUIRE_DB_TESTS: '1'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Apply migrations
+        run: pnpm db:migrate
+      - name: Apply migrations again (idempotency)
+        run: pnpm db:migrate
+      - name: Seed
+        run: pnpm db:seed
+      - name: Seed again (idempotency)
+        run: pnpm db:seed
+      - name: DB integration tests
+        run: pnpm test:integration
+      - name: Migration consistency check
+        run: pnpm db:check
+      - name: Schema drift check
+        run: |
+          pnpm db:generate
+          if [ -n "$(git status --porcelain drizzle)" ]; then
+            echo "Schema changed without a committed migration:" >&2
+            git status --porcelain drizzle >&2
+            exit 1
+          fi
+
+  secret-scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Fixture scan
+        run: pnpm scan:fixtures
+      - name: Fixture scan self-test
+        run: pnpm scan:fixtures --self-test
+      - name: Gitleaks (full history)
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/repo"
+          ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+          git /repo --config /repo/.gitleaks.toml --redact --exit-code 1 --no-banner
+
+  ci-success:
+    needs: [lint, typecheck, unit-tests, evals, docker-build, migration-check, secret-scan]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Fail if any required job failed or was cancelled
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          echo "$NEEDS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          if echo "$NEEDS" | jq -e '[.[].result] | any(. == "failure" or . == "cancelled")' >/dev/null; then
+            echo "One or more required jobs failed or were cancelled" >&2
+            exit 1
+          fi
