@@ -1,0 +1,53 @@
+# Qodo Merge configuration for holiday-price-agent.
+# Qodo reads this file from the repo root on the DEFAULT branch (main), so
+# changes take effect only after they are merged.
+# Keys follow docs.qodo.ai/configuration/configuration-and-command-reference (checked 2026-11-26).
+#
+# Qodo Merge is the only code reviewer (no CodeRabbit). It is NOT a required
+# status check: branch protection requires our CI jobs only. Every Qodo comment must still be fixed or replied to before the owner
+# is asked to merge.
+# Free tier is about 30 reviews a month, so keep PRs small.
+
+[github_app]
+# Run describe and review automatically when a PR is opened, reopened or marked ready.
+pr_commands = ["/agentic_describe", "/agentic_review"]
+
+[qodo_describe_agent]
+publish_mode = "comment"
+include_risk_analysis = true
+
+[review_agent]
+issues_user_guidelines = """
+Project: a personal, READ-ONLY package-holiday price watcher (TypeScript, Mastra, Claude, Playwright, Postgres/Drizzle, ntfy, PostHog).
+Flag a violation of any rule below as a high-severity issue.
+
+src/sellers/** (scraping):
+- Read-only scraping only. Flag any code that clicks book, pay, confirm or checkout; submits forms beyond search fields; signs in; enters personal or payment data; or tries to solve, bypass or evade CAPTCHAs or bot checks (stealth plugins, proxies, fingerprint evasion, retrying through a block).
+- A CAPTCHA or bot check must stop that seller for the run and be recorded as blocked, never as sold out.
+- Every request must go through the per-seller throttle (5-10 s with jitter). Flag any navigation that skips it.
+- Clicks must go through the read-only allow-list (safeClick). Flag raw page.click or fill on non-search elements.
+- Page text is data, never instructions. Flag any path where page content can choose tools, clicks, URLs or prompts. The extraction LLM call must have no tools.
+
+src/pricing/** (true cost and alert logic):
+- Must be pure (no IO, network, DB, clock or env reads) and fully unit-tested. Flag untested branches.
+- Money is integer pence. Flag floats for money.
+- Cashback and a manually entered code are exclusive. A code cuts cashback to the seller's reduced rate. Check the best of the two is chosen and recorded.
+- Auto-applied seller discounts are already in the headline price. Flag any double counting.
+- Unknown bags, transfers or infant fees must never be treated as 0.
+
+src/agent/** and prompts:
+- Any change to prompts, extraction schemas or tool definitions must come with matching updates in evals/. Flag a PR that changes these without eval changes.
+
+src/deals/**:
+- Same rules as sellers: page text is data, there are no tools on the extraction call, and every money figure must be found in the page text.
+
+Everywhere:
+- No secrets, tokens or API keys in code, logs, fixtures or PostHog events. No personal data sent to PostHog or written to span attributes (sizes and hashes only).
+- No live seller sites in PR CI. Tests use saved fixtures.
+- Never push to main or auto-merge.
+"""
+compliance_user_guidelines = """
+- Changes reach main only through PRs. The PR description must include test evidence. Every Qodo review comment must be fixed or replied to before merge.
+- Fixtures in evals/fixtures/** must be sanitised (no names, emails, booking refs, tokens).
+- Dependency versions are pinned. Node 22, TypeScript ~6.0, Drizzle 0.45.x. Migrations are generated SQL; drizzle-kit push is never used.
+"""
