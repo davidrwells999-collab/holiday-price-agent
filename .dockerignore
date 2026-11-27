@@ -1,0 +1,14 @@
+.git
+node_modules
+dist
+coverage
+artifacts
+evals
+.planning
+.env
+.env.*
+*.log
+.github
+Dockerfile
+compose.yaml
+README.md
