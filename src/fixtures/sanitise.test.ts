@@ -32,6 +32,21 @@ describe('sanitiseHtml', () => {
     expect(sanitiseHtml(html, noEnv)).toBe(html);
   });
 
+  it('sanitises unquoted and relative href/src values', () => {
+    expect(sanitiseHtml('<a href=/hotel?sessionId=x&airport=98#top>x</a>', noEnv)).toBe(
+      '<a href=/hotel?airport=98>x</a>',
+    );
+    expect(sanitiseHtml('<img src=../img.png?token=abc&w=2>', noEnv)).toBe(
+      '<img src=../img.png?w=2>',
+    );
+    expect(sanitiseHtml("<a href = 'rel?sid=1&a=2'>x</a>", noEnv)).toBe(
+      "<a href = 'rel?a=2'>x</a>",
+    );
+    expect(sanitiseHtml('<a href=https://example.com/p?gclid=1>x</a>', noEnv)).toBe(
+      '<a href=https://example.com/p>x</a>',
+    );
+  });
+
   it('sanitises URLs inside href and src attributes', () => {
     const html = '<a href="/hotel?duration=7&amp;sessionId=abc&amp;airport=98#top">x</a>';
     expect(sanitiseHtml(html, noEnv)).toBe('<a href="/hotel?duration=7&amp;airport=98">x</a>');
