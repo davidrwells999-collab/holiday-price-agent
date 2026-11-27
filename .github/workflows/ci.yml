@@ -237,6 +237,8 @@ jobs:
     env:
       # Dummy credentials for an ephemeral service container; not secrets.
       DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+      # Integration tests only use this server, creating and dropping their own database.
+      TEST_DATABASE_URL: postgres://ci:ci@localhost:5432/ci
       REQUIRE_DB_TESTS: '1'
     steps:
       - name: Checkout
