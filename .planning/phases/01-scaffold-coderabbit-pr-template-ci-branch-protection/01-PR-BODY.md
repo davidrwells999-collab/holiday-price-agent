@@ -32,7 +32,7 @@ Commands were run locally on this branch (macOS, Docker 29). This PR is the firs
   - Setting `enabled=false` for tui, then restarting, shows tui disabled.
   - `NTFY_TOPIC=` blank exits 1 with an error naming the variable.
   - `stop` logs `shutdown_requested` and exits 0.
-- **Image:** Node v22.23.5, uid 10001, Chromium 159 smoke test returns `title:"smoke"`, 541 MB compressed locally. CI measures it unpacked on amd64 at 1317 MB, and the cap is 1600 MB (see fix below).
+- **Image:** Node v22.23.5, uid 10001, Chromium 159 smoke test returns `title:"smoke"`, 1317 MB unpacked on linux/amd64 in CI (the 541 MB local figure was Docker Desktop's compressed size). The CI cap is 1450 MB, baseline +10%, re-measured whenever the base image or Chromium changes.
 - **Fixture scan:** `pnpm scan:fixtures` is clean and `--self-test` passes. A planted runtime email in a probe fixture failed the scan with only a masked value printed. The probe was deleted.
 - **Workflows:** actionlint 1.7.12 is clean on both. gitleaks v8.30.1 found nothing across the history.
 

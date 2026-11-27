@@ -177,10 +177,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      # Uncompressed linux/amd64 size as measured by this job: 1317 MB on the first CI run (PR #2).
+      # Gate measures the UNPACKED linux/amd64 size reported by this job (docker image inspect .Size).
+      # Baseline: 1317 MB on the first CI run (PR #2): node:22.23.5-bookworm-slim + Chromium 159 + prod deps.
+      # Limit = baseline + ~10% (1450 MB), so a second browser or leftover dev deps fail the gate.
+      # Re-measure and update this baseline whenever the base image, Playwright/Chromium or the dep set changes.
       # (Docker Desktop's containerd store reports the compressed size, ~541 MB, so local numbers are not comparable.)
-      # Limit = measured + ~15%, rounded up to 100 MB. Catches regressions such as extra browsers or dev deps.
-      IMAGE_SIZE_LIMIT_MB: '1600'
+      IMAGE_SIZE_LIMIT_MB: '1450'
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
