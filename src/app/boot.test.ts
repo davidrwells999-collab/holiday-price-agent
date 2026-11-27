@@ -106,6 +106,21 @@ describe('boot', () => {
     expect(end).toHaveBeenCalledTimes(1);
   });
 
+  it('closes the pool and rethrows the original error when the seller loader fails', async () => {
+    const boom = new Error('loader_failed');
+    const { deps, end } = makeDeps({ loadSellerConfig: () => Promise.reject(boom) });
+    await expect(boot(deps)).rejects.toBe(boom);
+    expect(end).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not close the pool on a successful boot', async () => {
+    const { deps, end } = makeDeps();
+    const ctx = await boot(deps);
+    expect(end).not.toHaveBeenCalled();
+    await ctx.shutdown();
+    expect(end).toHaveBeenCalledTimes(1);
+  });
+
   it('shutdown is idempotent and ends the pool once', async () => {
     const { deps, end } = makeDeps();
     const ctx = await boot(deps);

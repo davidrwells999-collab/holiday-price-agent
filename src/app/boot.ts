@@ -50,19 +50,25 @@ export async function boot(deps: BootDeps = {}): Promise<AppContext> {
   );
 
   const { db, pool } = (deps.createDb ?? defaultCreateDb)(env.DATABASE_URL);
+  let sellers: SellerEnablement;
   try {
-    await (deps.pingDb ?? defaultPingDb)(pool);
-  } catch (cause) {
-    await pool.end().catch(() => undefined);
-    throw new Error('database_unreachable', { cause });
-  }
+    try {
+      await (deps.pingDb ?? defaultPingDb)(pool);
+    } catch (cause) {
+      throw new Error('database_unreachable', { cause });
+    }
 
-  const rows = await (deps.loadSellerConfig ?? defaultLoadSellerConfig)(db);
-  const config: Partial<Record<SellerId, boolean>> = {};
-  for (const row of rows) {
-    if (isSellerId(row.id)) config[row.id] = row.enabled;
+    const rows = await (deps.loadSellerConfig ?? defaultLoadSellerConfig)(db);
+    const config: Partial<Record<SellerId, boolean>> = {};
+    for (const row of rows) {
+      if (isSellerId(row.id)) config[row.id] = row.enabled;
+    }
+    sellers = await resolveSellerEnablement(config, telemetry);
+  } catch (err) {
+    // Any failure after the pool exists must release it; rethrow the original error.
+    await pool.end().catch(() => undefined);
+    throw err;
   }
-  const sellers = await resolveSellerEnablement(config, telemetry);
 
   logger.info({ sellers, node: process.version }, 'app_ready');
 
