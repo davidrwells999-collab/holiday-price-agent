@@ -1,7 +1,10 @@
+import { createHash } from 'node:crypto';
 import { isPostHogEnabled, type Env } from '../config/env.js';
 import {
   DISTINCT_ID,
   EVENT_SCHEMAS,
+  EXCEPTION_SCHEMA,
+  type ExceptionProps,
   type EventName,
   type EventProps,
   type FlagKey,
@@ -14,11 +17,7 @@ export interface TelemetryBackend {
     event: EventName;
     properties: Record<string, unknown>;
   }): void | Promise<void>;
-  captureException(input: {
-    distinctId: string;
-    name: string;
-    message: string;
-  }): void | Promise<void>;
+  captureException(input: { distinctId: string } & ExceptionProps): void | Promise<void>;
   getFeatureFlag(key: FlagKey, distinctId: string): Promise<boolean | undefined>;
   flush(): Promise<void>;
   shutdown(): Promise<void>;
@@ -124,12 +123,21 @@ export function createTelemetry(
       );
     },
     captureException(error) {
-      const name = error instanceof Error ? error.name : 'NonError';
-      const raw = error instanceof Error ? error.message : '';
-      const message = stripUrlQueries(raw).slice(0, 200);
-      swallow('exception', () =>
-        backend.captureException({ distinctId: DISTINCT_ID, name, message }),
-      );
+      // Message text is never forwarded (it can hold emails, tokens or connection strings).
+      const message = error instanceof Error ? error.message : '';
+      const parsed = EXCEPTION_SCHEMA.safeParse({
+        error_name: error instanceof Error ? error.name : 'NonError',
+        message_sha256: createHash('sha256').update(message).digest('hex').slice(0, 16),
+        message_length: message.length,
+      });
+      const props: ExceptionProps = parsed.success
+        ? parsed.data
+        : {
+            error_name: 'Error',
+            message_sha256: createHash('sha256').update(message).digest('hex').slice(0, 16),
+            message_length: message.length,
+          };
+      swallow('exception', () => backend.captureException({ distinctId: DISTINCT_ID, ...props }));
     },
     async getFeatureFlag(key, fallback) {
       try {

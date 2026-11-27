@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { DISTINCT_ID, EVENT_SCHEMAS, type EventName } from './events.js';
 import {
@@ -144,24 +145,54 @@ describe('telemetry resilience', () => {
     expect(reasons).toEqual(['backend_error']);
   });
 
-  it('captureException sends name and a sanitised, truncated message', () => {
+  it('captureException sends only name, hash and length', () => {
     const { backend, captureException } = fakeBackend();
     const t = createTelemetry(ON, { backend });
-    const err = new TypeError(
-      `failed at https://example.com/a/b?token=SECRET#frag ${'x'.repeat(400)}`,
+    t.captureException(new TypeError('boom'));
+    const call = captureException.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(call).toEqual({
+      distinctId: DISTINCT_ID,
+      error_name: 'TypeError',
+      message_sha256: createHash('sha256').update('boom').digest('hex').slice(0, 16),
+      message_length: 4,
+    });
+  });
+
+  it('captureException never forwards emails, tokens or connection strings', () => {
+    const { backend, captureException } = fakeBackend();
+    const t = createTelemetry(ON, { backend });
+    const email = 'jane.doe' + '@' + 'example.com';
+    const token = 'sk-' + 'ant-' + 'a1'.repeat(20);
+    const conn = 'postgres://' + 'user:pass' + '@db.example.com:5432/x';
+    t.captureException(
+      new Error(`failed for ${email} with ${token} at ${conn} https://example.com/a?token=SECRET`),
     );
-    t.captureException(err);
-    const call = captureException.mock.calls[0]?.[0] as { name: string; message: string };
-    expect(call.name).toBe('TypeError');
-    expect(call.message).toContain('https://example.com/a/b');
-    expect(call.message).not.toContain('SECRET');
-    expect(call.message.length).toBeLessThanOrEqual(200);
+    const payload = JSON.stringify(captureException.mock.calls[0]?.[0]);
+    for (const leak of [email, token, conn, 'user:pass', 'SECRET', 'jane.doe', 'failed']) {
+      expect(payload).not.toContain(leak);
+    }
+    expect(Object.keys(captureException.mock.calls[0]?.[0] as object).sort()).toEqual([
+      'distinctId',
+      'error_name',
+      'message_length',
+      'message_sha256',
+    ]);
+  });
+
+  it('captureException does not forward a custom error name that holds free text', () => {
+    const { backend, captureException } = fakeBackend();
+    const err = new Error('x');
+    err.name = 'bad name jane.doe' + '@' + 'example.com';
+    createTelemetry(ON, { backend }).captureException(err);
+    expect(captureException.mock.calls[0]?.[0]).toMatchObject({ error_name: 'Error' });
   });
 
   it('captureException labels non-errors without forwarding content', () => {
     const { backend, captureException } = fakeBackend();
     createTelemetry(ON, { backend }).captureException('secret string');
-    expect(captureException.mock.calls[0]?.[0]).toMatchObject({ name: 'NonError', message: '' });
+    const call = captureException.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(call).toMatchObject({ error_name: 'NonError', message_length: 0 });
+    expect(JSON.stringify(call)).not.toContain('secret');
   });
 
   it('getFeatureFlag falls back on undefined or throw, otherwise uses the backend', async () => {

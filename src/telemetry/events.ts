@@ -75,6 +75,14 @@ export const EVENT_SCHEMAS = {
   }),
 } as const;
 
+// Exceptions never carry message text: only the class name, a short hash and the length.
+export const EXCEPTION_SCHEMA = z.strictObject({
+  error_name: z.string().regex(/^[A-Za-z][A-Za-z0-9_$]{0,59}$/),
+  message_sha256: z.string().regex(/^[0-9a-f]{16}$/),
+  message_length: z.number().int().min(0),
+});
+export type ExceptionProps = z.infer<typeof EXCEPTION_SCHEMA>;
+
 export type EventName = keyof typeof EVENT_SCHEMAS;
 export type EventProps<E extends EventName> = z.infer<(typeof EVENT_SCHEMAS)[E]>;
 
