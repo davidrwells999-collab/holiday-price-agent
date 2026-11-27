@@ -29,6 +29,7 @@
 - [ ] **CI-01**: The repo has `.coderabbit.yaml` (schema v2, chill profile, summary on, poem off).
   - Path filters exclude lockfiles, fixtures, migration snapshots and screenshots.
   - The specified path instructions cover sellers, pricing, agent and `**/*`.
+- [ ] **CI-08**: Before each PR is opened, `coderabbit review --base main` runs on the branch. Every finding is fixed or justified, and a summary of findings and resolutions is pasted into the PR description under "CodeRabbit CLI review"
 - [ ] **CI-02**: A PR template asks for a description, test evidence and a "fixtures sanitised" checkbox
 - [ ] **CI-03**: PR CI runs on every PR:
   - ESLint, Prettier check, `tsc --noEmit` and Vitest unit tests.
@@ -40,10 +41,9 @@
 - [ ] **CI-06**: Renovate (or Dependabot) opens grouped dependency PRs, and the CI jobs that need secrets skip cleanly on them
 - [ ] **CI-07**: The README documents the branch protection settings:
   - Protected `main`, with no direct pushes.
-  - `ci-success` required.
-  - Conversation resolution required.
+  - Required status checks are our CI jobs only (lint, typecheck, unit tests, evals when triggered, docker build, migration check). CodeRabbit is never a required check.
+  - Path-filtered jobs (evals) always report a status so they don't block untouched PRs.
   - 0 required approvals for a solo repo.
-  - A break-glass procedure if CodeRabbit is down.
 
 ### True cost (COST)
 
@@ -186,6 +186,7 @@
 | CI-05 | Phase 1 | Pending |
 | CI-06 | Phase 1 | Pending |
 | CI-07 | Phase 1 | Pending |
+| CI-08 | Phase 1 | Pending |
 | COST-01 | Phase 2 | Pending |
 | COST-02 | Phase 2 | Pending |
 | COST-03 | Phase 2 | Pending |
@@ -243,7 +244,7 @@
 | OPS-09 | Phase 7 | Pending |
 | DOC-01 | Phase 8 | Pending |
 
-**Coverage:** 68/68 v1 requirements mapped, no orphans, no duplicates.
+**Coverage:** 69/69 v1 requirements mapped, no orphans, no duplicates.
 
 ---
 *Requirements defined: 2026-11-26*

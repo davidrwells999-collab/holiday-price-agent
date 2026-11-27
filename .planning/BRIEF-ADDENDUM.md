@@ -1,5 +1,12 @@
 ## Addendum: workflow, CI/CD, evals, observability
 
+### Code review — CHANGE OF PLAN (supersedes the CodeRabbit app/branch-protection points below)
+No paid CodeRabbit. Repo stays private.
+- Still install/commit .coderabbit.yaml (used by the free PR summaries and the CLI).
+- Before opening each PR, run the CodeRabbit CLI review on the branch (`coderabbit review` against main), fix or justify every finding, and paste a summary of findings + resolutions into the PR description under "CodeRabbit CLI review".
+- Do NOT make the CodeRabbit check a required status check in branch protection. Required checks = our CI jobs only (lint, typecheck, unit tests, evals when triggered, docker build, migration check).
+- Optional, propose but don't add without my go-ahead: anthropics/claude-code-action as an automated PR reviewer using ANTHROPIC_API_KEY.
+
 ### Git workflow and code review (CodeRabbit)
 - GitHub repo. `main` is protected: no direct pushes. All work goes through PRs from feature branches.
 - Every PR is reviewed by **CodeRabbit** (the GitHub app is installed on the repo). Branch protection requires the CI checks below to pass **and** CodeRabbit's review comments to be resolved before merge.
